@@ -1,0 +1,19 @@
+import requests
+
+
+def fetch_data(symbol="BANKNIFTY", expiry="15JUL2021"):
+    url = f"https://vbiz.in/optionchain/foc.php?symbol={symbol}&expiry={expiry}"
+    headers = {
+        "accept": "*/*",
+        "accept-encoding": "gzip, deflate, br",
+        "accept-language": "en-IN,en;q=0.9,hi-IN;q=0.8,hi;q=0.7,mr-IN;q=0.6,mr;q=0.5,en-GB;q=0.4,en-US;q=0.3",
+        "origin": "http://vbiz.in",
+        "referer": "http://vbiz.in/",
+        "sec-ch-ua-mobile": "?0",
+        "sec-fetch-dest": "empty",
+        "sec-fetch-mode": "cors",
+        "sec-fetch-site": "cross-site",
+        "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.106 Safari/537.36",
+    }
+
+    return requests.get(url=url, headers=headers)
