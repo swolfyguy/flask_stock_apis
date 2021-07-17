@@ -1,0 +1,5 @@
+.idea/
+.isort.cfg
+venv/
+**/__pycache__/
+*.pyc

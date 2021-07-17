@@ -35,5 +35,5 @@ class NFOSchema(Schema):
     exited_at = fields.DateTime()
 
     # Temporary fields which doesnt have existence in db
-    symbol = fields.String() # TODO move it to models later
+    symbol = fields.String()  # TODO move it to models later
     strike_price = fields.Float(load_only=True)

@@ -22,7 +22,9 @@ def update_option_chain():
 
     valid_columns = OptionChain.__table__.c.keys()
     valid_columns.remove("date")
-    option_chain_db_id_list = [r[0] for r in OptionChain.query.with_entities(OptionChain.id).all()]
+    option_chain_db_id_list = [
+        r[0] for r in OptionChain.query.with_entities(OptionChain.id).all()
+    ]
 
     update_mappings = []
     insert_mappings = []
@@ -31,7 +33,9 @@ def update_option_chain():
         if int(option_chain_data["id"]) in option_chain_db_id_list:
             update_mappings.append(
                 {
-                    column: option_chain_data[column] if option_chain_data[column] else None
+                    column: option_chain_data[column]
+                    if option_chain_data[column]
+                    else None
                     for column in option_chain_data
                     if column in valid_columns
                 }
@@ -39,7 +43,9 @@ def update_option_chain():
         else:
             insert_mappings.append(
                 {
-                    column: option_chain_data[column] if option_chain_data[column] else None
+                    column: option_chain_data[column]
+                    if option_chain_data[column]
+                    else None
                     for column in option_chain_data
                     if column in valid_columns
                 }
