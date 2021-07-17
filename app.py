@@ -22,8 +22,10 @@ def _create_app():
     """
     Create a version of the app suitable for serving the website locally or in production.
     """
-app = _Flask(__name__, instance_relative_config=False)
-register_extensions(app)
+
+
+app = Flask(__name__, instance_relative_config=False)
+# register_extensions(app)
 register_json_routes(app)
 register_base_routes(app)
 # return app
