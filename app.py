@@ -14,7 +14,7 @@ from dotenv import load_dotenv, find_dotenv
 load_dotenv(find_dotenv())
 app = Flask(__name__, instance_relative_config=False)
 try:
-    register_extensions(app)
+    # register_extensions(app)
     register_json_routes(app)
     register_base_routes(app)
 except Exception as e:
