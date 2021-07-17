@@ -18,11 +18,19 @@ def _create_app():
     return app
 
 
-def create_webapp() -> Flask:  # pragma: no cover
+# def create_webapp() -> Flask:  # pragma: no cover
     """
     Create a version of the app suitable for serving the website locally or in production.
     """
-    app = _create_app()
-    register_json_routes(app)
-    register_base_routes(app)
-    return app
+app = _Flask(__name__, instance_relative_config=False)
+register_extensions(app)
+register_json_routes(app)
+register_base_routes(app)
+# return app
+
+
+# app = create_webapp()
+
+if __name__ == "__main__":
+    # Start application
+    app.run()
