@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 from app import create_webapp
-
+import os
 app = None
 
 if not app:
@@ -8,4 +8,4 @@ if not app:
 
 if __name__ == "__main__":
     # Start application
-    app.run()
+    app.run(host='0.0.0.0', port=int(os.environ.get("PORT", 5000)))
