@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-from app import create_webapp
 import os
 app = None
 
