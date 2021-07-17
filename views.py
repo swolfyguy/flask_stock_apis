@@ -1,6 +1,7 @@
 # Create endpoints
 import datetime
 import json
+import logging
 import time
 
 import schedule
@@ -63,6 +64,7 @@ def register_base_routes(app):
     @app.route("/")
     def index():
         response = "Hello from a public endpoint! You don't need to be authenticated to see this."
+        logging.info(f"API is up and running with response :{response}")
         return jsonify(message=response)
 
     @app.route("/api/schedule/dump_option_chain")
