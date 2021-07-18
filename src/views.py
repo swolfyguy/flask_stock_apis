@@ -1,7 +1,6 @@
 # Create endpoints
 import datetime
 import json
-import logging
 import time
 
 import schedule
@@ -12,6 +11,7 @@ from flask_rest_jsonapi import Api
 from apis.nfo import NFODetail
 from apis.nfo import NFOList
 from apis.constants import fetch_data
+from apis.option_chain import OptionChainList, OptionChainDetail
 from models.option_chain import OptionChain
 from extensions import db
 
@@ -64,7 +64,6 @@ def register_base_routes(app):
     @app.route("/")
     def index():
         response = "Hello from a public endpoint! You don't need to be authenticated to see this."
-        logging.info(f"API is up and running with response :{response}")
         return jsonify(message=response)
 
     @app.route("/api/schedule/dump_option_chain")
@@ -95,3 +94,6 @@ def register_json_routes(app):
 
     api.route(NFOList, "nfo_list", "/api/nfo")
     api.route(NFODetail, "nfo_detail", "/api/nfo/<int:id>")
+
+    api.route(OptionChainList, "option_chain_list", "/api/option_chain")
+    api.route(OptionChainDetail, "option_chain_detail", "/api/nfo/<int:id>")
