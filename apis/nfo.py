@@ -163,9 +163,7 @@ class NFOList(ResourceList):
         qs = QSManager(request.args, self.schema)
 
         schema_kwargs = getattr(self, "post_schema_kwargs", dict())
-        schema = compute_schema(
-            self.schema, schema_kwargs, qs, qs.include
-        )
+        schema = compute_schema(self.schema, schema_kwargs, qs, qs.include)
 
         try:
             data, errors = schema.load(json_data)
@@ -197,10 +195,8 @@ class NFOList(ResourceList):
             object_2 = buy_or_sell_option(self, data)
             objects = [*object_1, *object_2]
 
-        schema_kwargs.update({'many': True})
-        schema = compute_schema(
-            self.schema, schema_kwargs, qs, qs.include
-        )
+        schema_kwargs.update({"many": True})
+        schema = compute_schema(self.schema, schema_kwargs, qs, qs.include)
         result = schema.dump(objects).data
         return result
 
