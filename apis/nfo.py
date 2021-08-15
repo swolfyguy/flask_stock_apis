@@ -73,6 +73,7 @@ def buy_or_sell_future(self, data: dict):
         last_trade.profit = get_profit(last_trade, ltp)
         last_trade.exited_at = datetime.now()
         db.session.commit()
+        db.session.refresh(last_trade)
 
     data["entry_price"] = ltp
     # just in case we receive strike price as an additional attribute delete it
@@ -85,7 +86,8 @@ def buy_or_sell_future(self, data: dict):
     if data.get("strike"):
         del data["strike"]
 
-    self.create_object(data, kwargs={})
+    obj = self.create_object(data, kwargs={})
+    return last_trade, obj
 
 
 def buy_or_sell_option(self, data: dict):
@@ -110,6 +112,7 @@ def buy_or_sell_option(self, data: dict):
         last_trade.exited_at = datetime.now()
 
         db.session.commit()
+        db.session.refresh(last_trade)
 
     strike_price = data.get("strike_price")
     strike = data.get("strike")
@@ -147,7 +150,8 @@ def buy_or_sell_option(self, data: dict):
         data["strike"] = strike_option_data["strike"]
 
     data["entry_price"] = strike_option_data[f"{data['option_type']}ltp"]
-    self.create_object(data, kwargs={})
+    obj = self.create_object(data, kwargs={})
+    return last_trade, obj
 
 
 class NFOList(ResourceList):
@@ -158,8 +162,9 @@ class NFOList(ResourceList):
 
         qs = QSManager(request.args, self.schema)
 
+        schema_kwargs = getattr(self, "post_schema_kwargs", dict())
         schema = compute_schema(
-            self.schema, getattr(self, "post_schema_kwargs", dict()), qs, qs.include
+            self.schema, schema_kwargs, qs, qs.include
         )
 
         try:
@@ -184,14 +189,20 @@ class NFOList(ResourceList):
             return errors, 422
 
         if data.get("nfo_type").lower() == "future":
-            buy_or_sell_future(self, data)
+            objects = buy_or_sell_future(self, data)
         elif data.get("nfo_type").lower() == "option":
-            buy_or_sell_option(self, data)
+            objects = buy_or_sell_option(self, data)
         else:
-            buy_or_sell_future(self, data)
-            buy_or_sell_option(self, data)
+            object_1 = buy_or_sell_future(self, data)
+            object_2 = buy_or_sell_option(self, data)
+            objects = [*object_1, *object_2]
 
-        return "order placed successfully on paper"
+        schema_kwargs.update({'many': True})
+        schema = compute_schema(
+            self.schema, schema_kwargs, qs, qs.include
+        )
+        result = schema.dump(objects).data
+        return result
 
     schema = NFOSchema
     data_layer = {
