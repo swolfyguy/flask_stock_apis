@@ -14,11 +14,12 @@ class NFOSchema(Schema):
     nfo_type = fields.String()
 
     # order detail
-    action = fields.String()
     quantity = fields.Integer()
     entry_price = fields.Float()
     exit_price = fields.Float()
     profit = fields.Float()
+    placed_at = fields.DateTime()
+    exited_at = fields.DateTime()
 
     # option specific field
     strike = fields.Integer()
@@ -28,11 +29,8 @@ class NFOSchema(Schema):
     future_price = fields.Float(load_only=True)
 
     # strategy details
-    strategy = fields.Integer()
-
-    # execution timings
-    placed_at = fields.DateTime()
-    exited_at = fields.DateTime()
+    strategy_id = fields.Integer()
+    strategy_name = fields.String()
 
     # Temporary fields which doesnt have existence in db
     symbol = fields.String()  # TODO move it to models later
