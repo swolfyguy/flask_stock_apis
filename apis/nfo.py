@@ -52,21 +52,26 @@ class NFODetail(ResourceDetail):
     }
 
 
+def get_profit(trade, ltp):
+    b, a = 0, 0
+    if trade.action == "buy":
+        b, a = ltp, trade.entry_price
+    if trade.action == "sell":
+        b, a = trade.entry_price, ltp
+
+    return (b - a) * 25
+
+
 def buy_or_sell_future(self, data: dict):
     last_trade = NFO.query.filter_by(
         strategy=data["strategy"], exited_at=None, nfo_type="future"
     ).scalar()
 
-    if last_trade:
-        ltp = data["future_price"]
-        if last_trade.action == "buy":
-            b, a = ltp, last_trade.entry_price
-        if last_trade.action == "sell":
-            b, a = last_trade.entry_price, ltp
-        profit = (b - a) * 25
+    ltp = data["future_price"]
 
+    if last_trade:
         last_trade.exit_price = ltp
-        last_trade.profit = profit
+        last_trade.profit = get_profit(last_trade, ltp)
         last_trade.exited_at = datetime.now()
         db.session.commit()
 
@@ -96,12 +101,7 @@ def buy_or_sell_option(self, data: dict):
         )[0]
         ltp = old_strike_option_data[f"{last_trade.option_type}ltp"]
         last_trade.exit_price = ltp
-
-        if last_trade.action == "buy":
-            b, a = ltp, last_trade.entry_price
-        if last_trade.action == "sell":
-            b, a = last_trade.entry_price, ltp
-        last_trade.profit = (b - a) * 25
+        last_trade.profit = get_profit(last_trade, ltp)
         last_trade.exited_at = datetime.now()
 
         db.session.commit()
