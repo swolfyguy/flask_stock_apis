@@ -11,7 +11,6 @@ class NFO(db.Model):
     nfo_type = db.Column(db.String, nullable=False)
 
     # order detail
-    action = db.Column(db.String, nullable=False, server_default="buy")
     quantity = db.Column(db.Integer, default=25)
     entry_price = db.Column(db.Float, nullable=False)
     exit_price = db.Column(db.Float, nullable=True)
@@ -25,10 +24,7 @@ class NFO(db.Model):
     strike = db.Column(db.Integer, nullable=True)
     option_type = db.Column(db.String, nullable=True)
 
-    # future specific field
-    future_price = db.Column(db.Float, nullable=True)
-
     # strategy details
-    strategy = db.Column(db.Integer, nullable=False)
+    strategy_id = db.Column(db.Integer, nullable=False)
+    strategy_name = db.Column(db.String, nullable=False, default="RS[R0]")
     symbol = db.Column(db.String, nullable=False)
-

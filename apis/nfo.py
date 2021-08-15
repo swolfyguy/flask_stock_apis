@@ -53,10 +53,9 @@ class NFODetail(ResourceDetail):
 
 
 def get_profit(trade, ltp):
-    b, a = 0, 0
-    if trade.action == "buy":
+    if trade.quantity > 0:
         b, a = ltp, trade.entry_price
-    if trade.action == "sell":
+    else:
         b, a = trade.entry_price, ltp
 
     return (b - a) * 25
@@ -67,7 +66,7 @@ def buy_or_sell_future(self, data: dict):
         strategy=data["strategy"], exited_at=None, nfo_type="future"
     ).scalar()
 
-    ltp = data["future_price"]
+    ltp = data["entry_price"]
 
     if last_trade:
         last_trade.exit_price = ltp
@@ -123,6 +122,8 @@ def buy_or_sell_option(self, data: dict):
                 options_data_lst,
             )
         )[0]
+        # strike_price doesnt make entry to database its only for selection of exact strike price which is entry price
+        del data["strike_price"]
     else:
         strike_option_data = list(
             filter(
