@@ -16,6 +16,10 @@ class NFO(db.Model):
     entry_price = db.Column(db.Float, nullable=False)
     exit_price = db.Column(db.Float, nullable=True)
     profit = db.Column(db.Float, nullable=True)
+    placed_at = db.Column(
+        db.TIMESTAMP(timezone=True), nullable=False, default=datetime.now()
+    )
+    exited_at = db.Column(db.TIMESTAMP(timezone=True), nullable=True)
 
     # option specific field
     strike = db.Column(db.Integer, nullable=True)
@@ -28,8 +32,3 @@ class NFO(db.Model):
     strategy = db.Column(db.Integer, nullable=False)
     symbol = db.Column(db.String, nullable=False)
 
-    # execution details
-    placed_at = db.Column(
-        db.TIMESTAMP(timezone=True), nullable=False, default=datetime.now()
-    )
-    exited_at = db.Column(db.TIMESTAMP(timezone=True), nullable=True)

@@ -52,6 +52,91 @@ class NFODetail(ResourceDetail):
     }
 
 
+def buy_or_sell_future(self, data: dict):
+    last_trade = NFO.query.filter_by(
+        strategy=data["strategy"], exited_at=None, nfo_type="future"
+    ).scalar()
+
+    if last_trade:
+        ltp = data["future_price"]
+        if last_trade.action == "buy":
+            b, a = ltp, last_trade.entry_price
+        if last_trade.action == "sell":
+            b, a = last_trade.entry_price, ltp
+        profit = (b - a) * 25
+
+        last_trade.exit_price = ltp
+        last_trade.profit = profit
+        last_trade.exited_at = datetime.now()
+        db.session.commit()
+
+    data["entry_price"] = ltp
+    # just in case we receive strike price as an additional attribute delete it
+    if data.get("strike_price"):
+        del data["strike_price"]
+
+    self.create_object(data, kwargs={})
+
+
+def buy_or_sell_option(self, data: dict):
+    # TODO fetch expiry from nse lib
+    res = fetch_data(data["symbol"])
+    options_data_lst = json.loads(res.json()["OptionChainInfo"])
+
+    last_trade = NFO.query.filter_by(
+        strategy=data["strategy"], exited_at=None, nfo_type="option"
+    ).scalar()
+
+    if last_trade:
+        old_strike_option_data = list(
+            filter(
+                lambda option_data: option_data["strike"] == last_trade.strike,
+                options_data_lst,
+            )
+        )[0]
+        ltp = old_strike_option_data[f"{last_trade.option_type}ltp"]
+        last_trade.exit_price = ltp
+
+        if last_trade.action == "buy":
+            b, a = ltp, last_trade.entry_price
+        if last_trade.action == "sell":
+            b, a = last_trade.entry_price, ltp
+        last_trade.profit = (b - a) * 25
+        last_trade.exited_at = datetime.now()
+
+        db.session.commit()
+
+    strike_price = data.get("strike_price")
+    strike = data.get("strike")
+    if strike:
+        strike_option_data = list(
+            filter(
+                lambda option_data: option_data["strike"] == strike, options_data_lst
+            )
+        )[0]
+    elif strike_price:
+        strike_option_data = list(
+            filter(
+                lambda option_data: -50
+                < option_data["strike_price"] - strike_price
+                < 100,
+                options_data_lst,
+            )
+        )[0]
+    else:
+        strike_option_data = list(
+            filter(
+                lambda option_data: option_data[f"{data['option_type']}status"]
+                == "ATM",
+                options_data_lst,
+            )
+        )[0]
+
+    data["entry_price"] = strike_option_data[f"{data['option_type']}ltp"]
+
+    self.create_object(data, kwargs={})
+
+
 class NFOList(ResourceList):
     @check_method_requirements
     def post(self, *args, **kwargs):
@@ -85,150 +170,15 @@ class NFOList(ResourceList):
                 error["title"] = "Validation error"
             return errors, 422
 
-        self.before_post(args, kwargs, data=data)
-
-        future_data = deepcopy(data)
-        # delete option specific data
-        del future_data["strike"]
-        # del future_data["option_type"]
-        future_data["nfo_type"] = "future"
-        future_data["entry_price"] = future_data["future_price"]
-        if future_data.get("strike_price"):
-            del future_data["strike_price"]
-
-        # delete future specific data
-        del data["future_price"]
-        if data["action"] == "buy":
-            data["option_type"] = "ce"
+        if data.get("nfo_type").lower() == "future":
+            buy_or_sell_future(self, data)
+        elif data.get("nfo_type").lower() == "option":
+            buy_or_sell_option(self, data)
         else:
-            data["option_type"] = "pe"
-        data["nfo_type"] = "option"
-        if data.get("strike_price"):
-            del data["strike_price"]
+            buy_or_sell_future(self, data)
+            buy_or_sell_option(self, data)
 
-        option_obj = self.create_object(data, kwargs)
-        future_obj = self.create_object(future_data, kwargs)
-
-        result = schema.dump(option_obj).data
-
-        if result["data"].get("links", {}).get("self"):
-            final_result = (result, 201, {"Location": result["data"]["links"]["self"]})
-        else:
-            final_result = (result, 201)
-
-        result = self.after_post(final_result)
-
-        return result
-
-    def before_post(self, args, kwargs, data=None):
-        # TODO create two object one for future another for option
-
-        last_trade_list = NFO.query.filter_by(
-            strategy=data["strategy"], exited_at=None
-        ).all()
-        # TODO fetch expiry from nse lib
-        res = fetch_data(data["symbol"])
-        data_lst = json.loads(res.json()["OptionChainInfo"])
-        strike_price = data.get("strike_price")
-        strike = data.get("strike")
-        if not data.get("option_type"):
-            option_type = "ce" if data["action"] == "buy" else "pe"
-        else:
-            option_type = data["option_type"]
-
-        option_last_trade = False
-        future_last_trade = False
-        if last_trade_list:
-            for last_trade in last_trade_list:
-                if last_trade.nfo_type == "option":
-                    option_last_trade = last_trade
-                if last_trade.nfo_type == "future":
-                    future_last_trade = last_trade
-
-        if strike:
-            for option_data in data_lst:
-                if option_data["strike"] == strike:
-                    data["entry_price"] = option_data[f"{option_type}ltp"]
-                    break
-                if (
-                    option_last_trade
-                    and option_data["strike"] == option_last_trade.strike
-                ):
-                    exit_price = option_data[f"{option_last_trade.option_type}ltp"]
-        elif strike_price:
-            exit_price_found = False if option_last_trade else True
-            entry_price_found = False
-
-            for option_data in data_lst:
-                if isinstance(option_data[f"{option_type}ltp"], float):
-                    ltp = int(option_data[f"{option_type}ltp"])
-                else:
-                    ltp = 0
-
-                diff = ltp - int(data["strike_price"])
-                if not entry_price_found and -50 < diff < 100:
-                    data["entry_price"] = ltp
-                    data["strike"] = option_data["strike"]
-                    entry_price_found = True
-                if (
-                    option_last_trade
-                    and option_data["strike"] == option_last_trade.strike
-                ):
-                    exit_price = option_data[f"{option_last_trade.option_type}ltp"]
-                    exit_price_found = True
-
-                if exit_price_found and entry_price_found:
-                    del data["strike_price"]
-                    break
-        else:
-            for option_data in data_lst:
-                if option_data[f"{option_type}status"] == "ATM":
-                    data["entry_price"] = option_data[f"{option_type}ltp"]
-                    data["strike"] = option_data["strike"]
-                    break
-                if (
-                    option_last_trade
-                    and option_data["strike"] == option_last_trade.strike
-                ):
-                    exit_price = option_data[f"{option_last_trade.option_type}ltp"]
-
-        if option_last_trade:
-            option_last_trade.profit = (exit_price - option_last_trade.entry_price) * 25
-            option_last_trade.exit_price = exit_price
-            option_last_trade.exited_at = datetime.now()
-            db.session.add(option_last_trade)
-
-        if future_last_trade:
-            future_ltp = data["future_price"]
-            future_last_trade.exit_price = future_ltp
-            diff = (future_ltp - future_last_trade.entry_price) * 25
-            future_last_trade.profit = (
-                diff if future_last_trade.action == "buy" else -diff
-            )
-            future_last_trade.exited_at = datetime.now()
-            db.session.add(future_last_trade)
-
-        db.session.commit()
-
-        # do not remove below code
-        # if data["option_type"] == "PE":
-        #     pass
-        # else:
-        #     last_trade_list = Option.query.order_by(Option.created_at.desc()).all()
-        #     if last_trade_list:
-        #         option_last_trade = last_trade_list[0]
-        #         exit_price = nsepython.nse_quote_ltp(
-        #             "BANKNIFTY", "24-Jun-2021", "PE", 34500
-        #         )
-        #         option_last_trade.exit_price = exit_price
-        #         option_last_trade.profit = exit_price - option_last_trade.entry_price
-        #         option_last_trade.updated_at = datetime.now()
-        #         db.session.add(option_last_trade)
-        #         db.session.commit()
-        #
-        #     data["entry_price"] = nsepython.nse_quote_ltp(
-        #         "BANKNIFTY", "24-Jun-2021", "CE", 34500
-        #     )
+        return "order placed successfully on paper"
 
     schema = NFOSchema
     data_layer = {
