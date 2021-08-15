@@ -79,6 +79,12 @@ def buy_or_sell_future(self, data: dict):
     if data.get("strike_price"):
         del data["strike_price"]
 
+    if data.get("option_type"):
+        del data["option_type"]
+
+    if data.get("strike"):
+        del data["strike"]
+
     self.create_object(data, kwargs={})
 
 
@@ -117,11 +123,17 @@ def buy_or_sell_option(self, data: dict):
         strike_option_data = list(
             filter(
                 lambda option_data: -50
-                < option_data["strike_price"] - strike_price
+                < (
+                    int(option_data[f"{data['option_type']}ltp"])
+                    if isinstance(option_data[f"{data['option_type']}ltp"], float)
+                    else 0
+                )
+                - int(strike_price)
                 < 100,
                 options_data_lst,
             )
         )[0]
+        data["strike"] = strike_option_data["strike"]
         # strike_price doesnt make entry to database its only for selection of exact strike price which is entry price
         del data["strike_price"]
     else:
@@ -132,9 +144,9 @@ def buy_or_sell_option(self, data: dict):
                 options_data_lst,
             )
         )[0]
+        data["strike"] = strike_option_data["strike"]
 
     data["entry_price"] = strike_option_data[f"{data['option_type']}ltp"]
-
     self.create_object(data, kwargs={})
 
 
