@@ -63,7 +63,7 @@ def get_profit(trade, ltp):
 
 def buy_or_sell_future(self, data: dict):
     last_trade = NFO.query.filter_by(
-        strategy=data["strategy"], exited_at=None, nfo_type="future"
+        strategy_id=data["strategy_id"], exited_at=None, nfo_type="future"
     ).scalar()
 
     ltp = data["entry_price"]
@@ -88,7 +88,7 @@ def buy_or_sell_option(self, data: dict):
     options_data_lst = json.loads(res.json()["OptionChainInfo"])
 
     last_trade = NFO.query.filter_by(
-        strategy=data["strategy"], exited_at=None, nfo_type="option"
+        strategy_id=data["strategy_id"], exited_at=None, nfo_type="option"
     ).scalar()
 
     if last_trade:
