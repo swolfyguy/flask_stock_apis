@@ -20,6 +20,7 @@ class NFOSchema(Schema):
     profit = fields.Float()
     placed_at = fields.DateTime()
     exited_at = fields.DateTime()
+    action = fields.String(load_only=True)
 
     # option specific field
     strike = fields.Integer()

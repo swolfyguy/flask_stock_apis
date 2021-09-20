@@ -108,6 +108,7 @@ def buy_or_sell_option(self, data: dict):
         strategy_id=data["strategy_id"], exited_at=None, nfo_type="option"
     ).all()
 
+    data["option_type"] = "ce" if data["action"] == "buy" else "pe"
     if last_trades:
         if last_trades[0].option_type != data["option_type"]:
             mappings = []
@@ -183,6 +184,10 @@ def buy_or_sell_option(self, data: dict):
 
     if data.get("future_price"):
         del data["future_price"]
+
+    if data.get("action"):
+        del data["action"]
+
     obj = self.create_object(data, kwargs={})
     return last_trades, obj
 
