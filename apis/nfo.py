@@ -117,7 +117,7 @@ def buy_or_sell_option(self, data: dict):
                 mappings.append(
                     {
                         "id": trade.id,
-                        "profit": exit_price - trade.entry_price,
+                        "profit": get_profit(trade, exit_price),
                         "exit_price": exit_price,
                         "exited_at": current_time,
                     }
