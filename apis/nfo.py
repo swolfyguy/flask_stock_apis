@@ -57,7 +57,7 @@ def get_profit(trade, ltp):
     else:
         b, a = trade.entry_price, ltp
 
-    return (b - a) * 25
+    return (b - a) * trade.quantity
 
 
 def buy_or_sell_future(self, data: dict):
@@ -89,11 +89,9 @@ def buy_or_sell_future(self, data: dict):
     return last_trade, obj
 
 
-def buy_or_sell_option(self, data: dict):
-    # TODO fetch expiry from nse lib
-    current_time = datetime.now()
-    res = fetch_data(data["symbol"])
-    options_data_lst = json.loads(res.json()["OptionChainInfo"])
+def get_constructed_data(options_data_lst=None):
+    if not options_data_lst:
+        options_data_lst = get_options_data_list()
 
     constructed_data = {}
     for option_data in options_data_lst:
@@ -103,6 +101,18 @@ def buy_or_sell_option(self, data: dict):
                 f'{option_data["strike"]}_pe': option_data["peltp"],
             }
         )
+    return constructed_data
+
+
+def get_options_data_list(symbol="BANKNIFTY"):
+    res = fetch_data(symbol)
+    return json.loads(res.json()["OptionChainInfo"])
+
+
+def buy_or_sell_option(self, data: dict):
+    # TODO fetch expiry from nse lib
+    current_time = datetime.now()
+    constructed_data = get_constructed_data(get_options_data_list(data["symbol"]))
 
     last_trades = NFO.query.filter_by(
         strategy_id=data["strategy_id"], exited_at=None, nfo_type="option"

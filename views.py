@@ -8,13 +8,14 @@ from flask import app
 from flask import jsonify
 from flask_rest_jsonapi import Api
 
-from apis.nfo import NFODetail
+from apis.nfo import NFODetail, get_constructed_data
 from apis.nfo import NFOList
 from apis.constants import fetch_data
 from apis.option_chain import OptionChainList, OptionChainDetail
 from models.nfo import NFO
 from models.option_chain import OptionChain
 from extensions import db
+from apis.nfo import get_profit
 
 
 def update_option_chain():
@@ -75,10 +76,18 @@ def register_base_routes(app):
             time.sleep(1)
 
     @app.route("/api/profit")
-    def get_profit():
-        return str(
-            sum([nfo.profit for nfo in NFO.query.filter(NFO.profit != None).all()])
-        )
+    def compute_profit():
+        constructed_data = get_constructed_data()
+        profit = 0
+        for nfo in NFO.query.all():
+            if nfo.profit:
+                profit += nfo.profit
+            else:
+                profit = profit + get_profit(
+                    nfo, constructed_data[f"{nfo.strike}_{nfo.option_type}"]
+                )
+        return str(round(profit, 2))
+
 
 def register_json_routes(app):
     api = Api(app)
