@@ -12,6 +12,7 @@ from apis.nfo import NFODetail
 from apis.nfo import NFOList
 from apis.constants import fetch_data
 from apis.option_chain import OptionChainList, OptionChainDetail
+from models.nfo import NFO
 from models.option_chain import OptionChain
 from extensions import db
 
@@ -73,6 +74,11 @@ def register_base_routes(app):
             schedule.run_pending()
             time.sleep(1)
 
+    @app.route("/api/profit")
+    def get_profit():
+        return str(
+            sum([nfo.profit for nfo in NFO.query.filter(NFO.profit != None).all()])
+        )
 
 def register_json_routes(app):
     api = Api(app)
