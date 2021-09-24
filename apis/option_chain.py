@@ -1,5 +1,5 @@
 # Create resource managers
-from flask_rest_jsonapi import ResourceList, ResourceDetail
+from flask_rest_jsonapi import ResourceDetail, ResourceList
 
 from extensions import db
 from models.option_chain import OptionChain
