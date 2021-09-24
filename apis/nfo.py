@@ -82,7 +82,7 @@ class NFOList(ResourceList):
                     "count": objects_count,
                     "profit": get_computed_profit(objects),
                     "on-going-calls": len(
-                        [obj for obj in objects if obj.exited_at == None]
+                        [obj for obj in objects if not obj.exited_at]
                     ),
                 }
             }
