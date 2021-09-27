@@ -62,7 +62,9 @@ def get_constructed_data(options_data_lst=None):
 def get_options_data_list(symbol="BANKNIFTY"):
     expiry_split = expiry_list(symbol)[0].split("-")
     formatted_expiry = f"{expiry_split[0]}{expiry_split[1].upper()}{expiry_split[2]}"
-    res = fetch_data(symbol, expiry=formatted_expiry)
+    # res = fetch_data(symbol, expiry=formatted_expiry)
+
+    res = fetch_data(symbol, expiry="30SEP2021")
     return json.loads(res.json()["OptionChainInfo"])
 
 
