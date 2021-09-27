@@ -22,7 +22,7 @@ log = logging.getLogger(__file__)
 
 
 class NFODetail(ResourceDetail):
-    # ignore below code its dummy
+    # ignore below code its dummy.
     def before_get_object(self, view_kwargs):
         if view_kwargs.get("computer_id") is not None:
             try:
