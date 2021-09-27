@@ -81,7 +81,7 @@ def get_options_data_list(symbol="BANKNIFTY"):
 
 
 def buy_or_sell_option(self, data: dict):
-    # TODO fetch expiry from nse lib
+    # TODO fetch expiry from nse lib .
     current_time = datetime.now()
     constructed_data = get_constructed_data(get_options_data_list(data["symbol"]))
 
