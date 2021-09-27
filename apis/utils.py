@@ -62,21 +62,21 @@ def get_constructed_data(options_data_lst=None):
 
 
 def get_options_data_list(symbol="BANKNIFTY"):
-    todays_date = date.today()
-    current_month_expiry_list = sorted(
-        get_expiry_date(year=todays_date.year, month=todays_date.month, index=symbol)
-    )
-    options_expiry_dt = None
-    for dt in current_month_expiry_list:
-        if dt > todays_date:
-            options_expiry_dt = dt
-            break
+    # todays_date = date.today()
+    # current_month_expiry_list = sorted(
+    #     get_expiry_date(year=todays_date.year, month=todays_date.month, index=symbol)
+    # )
+    # options_expiry_dt = None
+    # for dt in current_month_expiry_list:
+    #     if dt > todays_date:
+    #         options_expiry_dt = dt
+    #         break
+    #
+    # formatted_expiry = ""
+    # if options_expiry_dt:
+    #     formatted_expiry = f"{options_expiry_dt.day}{options_expiry_dt.strftime('%b').upper()}{options_expiry_dt.year}"
 
-    formatted_expiry = ""
-    if options_expiry_dt:
-        formatted_expiry = f"{options_expiry_dt.day}{options_expiry_dt.strftime('%b').upper()}{options_expiry_dt.year}"
-
-    res = fetch_data(symbol, expiry=formatted_expiry)
+    res = fetch_data(symbol, expiry="30SEP2021")
     return json.loads(res.json()["OptionChainInfo"])
 
 
