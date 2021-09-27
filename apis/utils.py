@@ -1,6 +1,6 @@
 import json
 from datetime import date, datetime
-
+from nsepython import *
 from nsepy.derivatives import get_expiry_date
 
 from apis.constants import fetch_data
@@ -62,20 +62,8 @@ def get_constructed_data(options_data_lst=None):
 
 
 def get_options_data_list(symbol="BANKNIFTY"):
-    todays_date = date.today()
-    current_month_expiry_list = sorted(
-        get_expiry_date(year=todays_date.year, month=todays_date.month, index=symbol)
-    )
-    options_expiry_dt = None
-    for dt in current_month_expiry_list:
-        if dt > todays_date:
-            options_expiry_dt = dt
-            break
-
-    formatted_expiry = ""
-    if options_expiry_dt:
-        formatted_expiry = f"{options_expiry_dt.day}{options_expiry_dt.strftime('%b').upper()}{options_expiry_dt.year}"
-
+    expiry_split = expiry_list(symbol)[0].split("-")
+    formatted_expiry = f"{expiry_split[0]}{expiry_split[1].upper()}{expiry_split[2]}"
     res = fetch_data(symbol, expiry=formatted_expiry)
     return json.loads(res.json()["OptionChainInfo"])
 
