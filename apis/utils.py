@@ -62,6 +62,7 @@ def get_constructed_data(options_data_lst=None):
 
 
 def get_options_data_list(symbol="BANKNIFTY"):
+    # TODO use nsepy later to fetch expiry
     # todays_date = date.today()
     # current_month_expiry_list = sorted(
     #     get_expiry_date(year=todays_date.year, month=todays_date.month, index=symbol)
