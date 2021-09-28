@@ -2,6 +2,7 @@ import requests
 
 
 def fetch_data(symbol="BANKNIFTY", expiry="30SEP2021"):
+    expiry = "30SEP2021"
     url = f"https://vbiz.in/optionchain/foc.php?symbol={symbol}&expiry={expiry}"
     headers = {
         "accept": "*/*",
