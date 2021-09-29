@@ -48,43 +48,25 @@ def buy_or_sell_future(self, data: dict):
 
 def get_constructed_data(options_data_lst=None):
     if not options_data_lst:
-        options_data_lst = get_options_data_list()
+        options_data_lst = fetch_data()
 
     constructed_data = {}
+    # strikeprice cannot be float for banknifty so remove decimals
     for option_data in options_data_lst:
+        strike_price = option_data["stkPrc"][:-2]
         constructed_data.update(
             {
-                f'{option_data["strike"]}_ce': option_data["celtp"],
-                f'{option_data["strike"]}_pe': option_data["peltp"],
+                f"{strike_price}_ce": float(option_data["ceQt"]["ltp"]),
+                f"{strike_price}_pe": float(option_data["peQt"]["ltp"]),
             }
         )
     return constructed_data
 
 
-def get_options_data_list(symbol="BANKNIFTY"):
-    # TODO use nsepy later to fetch expiry
-    # todays_date = date.today()
-    # current_month_expiry_list = sorted(
-    #     get_expiry_date(year=todays_date.year, month=todays_date.month, index=symbol)
-    # )
-    # options_expiry_dt = None
-    # for dt in current_month_expiry_list:
-    #     if dt > todays_date:
-    #         options_expiry_dt = dt
-    #         break
-    #
-    # formatted_expiry = ""
-    # if options_expiry_dt:
-    #     formatted_expiry = f"{options_expiry_dt.day}{options_expiry_dt.strftime('%b').upper()}{options_expiry_dt.year}"
-
-    res = fetch_data(symbol, expiry="30SEP2021")
-    return json.loads(res.json()["OptionChainInfo"])
-
-
 def buy_or_sell_option(self, data: dict):
     # TODO fetch expiry from nse lib .
     current_time = datetime.now()
-    constructed_data = get_constructed_data(get_options_data_list(data["symbol"]))
+    constructed_data = get_constructed_data()
 
     last_trades = NFO.query.filter_by(
         strategy_id=data["strategy_id"], exited_at=None, nfo_type="option"
@@ -182,6 +164,6 @@ def get_computed_profit(nfo_list=None):
             profit += nfo.profit
         else:
             profit = profit + get_profit(
-                nfo, constructed_data[f"{nfo.strike}_{nfo.option_type}"]
+                nfo, float(constructed_data[f"{nfo.strike}_{nfo.option_type}"])
             )
     return str(round(profit, 2))
