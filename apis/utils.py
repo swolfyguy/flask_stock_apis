@@ -1,7 +1,4 @@
-import json
-from datetime import date, datetime
-
-from nsepy.derivatives import get_expiry_date
+from datetime import  datetime
 
 from apis.constants import fetch_data
 from extensions import db
