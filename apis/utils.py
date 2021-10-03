@@ -1,4 +1,4 @@
-from datetime import  datetime
+from datetime import datetime
 
 from apis.constants import fetch_data
 from extensions import db
@@ -43,9 +43,8 @@ def buy_or_sell_future(self, data: dict):
     return last_trade, obj
 
 
-def get_constructed_data(options_data_lst=None):
-    if not options_data_lst:
-        options_data_lst = fetch_data()
+def get_constructed_data(symbol="BANKNIFTY"):
+    options_data_lst = fetch_data(symbol)
 
     constructed_data = {}
     # strikeprice cannot be float for banknifty so remove decimals
@@ -57,16 +56,23 @@ def get_constructed_data(options_data_lst=None):
                 f"{strike_price}_pe": float(option_data["peQt"]["ltp"]),
             }
         )
+
+        if option_data["atm"] == True:
+            constructed_data.update({"atm": option_data["stkPrc"]})
+
     return constructed_data
 
 
 def buy_or_sell_option(self, data: dict):
     # TODO fetch expiry from nse lib .
     current_time = datetime.now()
-    constructed_data = get_constructed_data()
+    constructed_data = get_constructed_data(data["symbol"])
 
     last_trades = NFO.query.filter_by(
-        strategy_id=data["strategy_id"], exited_at=None, nfo_type="option"
+        strategy_id=data["strategy_id"],
+        exited_at=None,
+        nfo_type="option",
+        symbol=data["symbol"],
     ).all()
 
     data["option_type"] = "ce" if data["action"] == "buy" else "pe"
@@ -147,6 +153,9 @@ def buy_or_sell_option(self, data: dict):
         del data["future_price"]
 
     if data.get("action"):
+        data["quantity"] = (
+            data["quantity"] if data["action"] == "buy" else -data["quantity"]
+        )
         del data["action"]
 
     obj = self.create_object(data, kwargs={})
