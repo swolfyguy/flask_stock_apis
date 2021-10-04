@@ -1,4 +1,5 @@
-from datetime import  datetime
+import json
+from datetime import datetime
 
 from apis.constants import fetch_data
 from extensions import db
@@ -43,9 +44,8 @@ def buy_or_sell_future(self, data: dict):
     return last_trade, obj
 
 
-def get_constructed_data(options_data_lst=None):
-    if not options_data_lst:
-        options_data_lst = fetch_data()
+def get_constructed_data(symbol="BANKNIFTY"):
+    options_data_lst = fetch_data(symbol)
 
     constructed_data = {}
     # strikeprice cannot be float for banknifty so remove decimals
@@ -57,16 +57,23 @@ def get_constructed_data(options_data_lst=None):
                 f"{strike_price}_pe": float(option_data["peQt"]["ltp"]),
             }
         )
+
+        if option_data["atm"] == True:
+            constructed_data.update({"atm": option_data["stkPrc"]})
+
     return constructed_data
 
 
 def buy_or_sell_option(self, data: dict):
     # TODO fetch expiry from nse lib .
     current_time = datetime.now()
-    constructed_data = get_constructed_data()
+    constructed_data = get_constructed_data(data["symbol"])
 
     last_trades = NFO.query.filter_by(
-        strategy_id=data["strategy_id"], exited_at=None, nfo_type="option"
+        strategy_id=data["strategy_id"],
+        exited_at=None,
+        nfo_type="option",
+        symbol=data["symbol"],
     ).all()
 
     data["option_type"] = "ce" if data["action"] == "buy" else "pe"
@@ -147,6 +154,9 @@ def buy_or_sell_option(self, data: dict):
         del data["future_price"]
 
     if data.get("action"):
+        data["quantity"] = (
+            data["quantity"] if data["action"] == "buy" else -data["quantity"]
+        )
         del data["action"]
 
     obj = self.create_object(data, kwargs={})
@@ -154,13 +164,33 @@ def buy_or_sell_option(self, data: dict):
 
 
 def get_computed_profit(nfo_list=None):
-    constructed_data = get_constructed_data()
-    profit = 0
+    bank_nifty_constructed_data = get_constructed_data(symbol="BANKNIFTY")
+    nifty_constructed_data = get_constructed_data(symbol="NIFTY")
+
+    bank_nifty_profit = 0
+    nifty_profit = 0
+
     for nfo in NFO.query.all() if not nfo_list else nfo_list:
-        if nfo.profit:
-            profit += nfo.profit
+        if nfo.symbol == "BANKNIFTY":
+            if nfo.profit:
+                bank_nifty_profit = bank_nifty_profit + nfo.profit
+            else:
+                bank_nifty_profit = bank_nifty_profit + get_profit(
+                    nfo,
+                    float(
+                        bank_nifty_constructed_data[f"{nfo.strike}_{nfo.option_type}"]
+                    ),
+                )
         else:
-            profit = profit + get_profit(
-                nfo, float(constructed_data[f"{nfo.strike}_{nfo.option_type}"])
-            )
-    return str(round(profit, 2))
+            if nfo.profit:
+                nifty_profit = nifty_profit + nfo.profit
+            else:
+                nifty_profit = nifty_profit + get_profit(
+                    nfo,
+                    float(nifty_constructed_data[f"{nfo.strike}_{nfo.option_type}"]),
+                )
+
+    return {
+        "banknifty": str(round(bank_nifty_profit, 2)),
+        "nifty": str(round(nifty_profit, 2)),
+    }

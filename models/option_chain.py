@@ -1,5 +1,4 @@
 # Create data storage
-import datetime
 from datetime import date
 
 from extensions import db
@@ -10,12 +9,9 @@ class OptionChain(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
 
+    symbol = db.Column(db.String, nullable=False, default="BANKNIFTY")
     strike = db.Column(db.Integer, nullable=False, default=10000)
-
     celtp = db.Column(db.Float, nullable=True, default=0.0)
-    celtt = db.Column(db.Time, nullable=True, default=datetime.datetime.now().time())
-
     peltp = db.Column(db.Float, nullable=True, default=0.0)
-    peltt = db.Column(db.Time, nullable=True, default=datetime.datetime.now().time())
-
+    atm = db.Column(db.Boolean, nullable=False, default=False)
     date = db.Column(db.Date, default=date.today())

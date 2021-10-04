@@ -1,63 +1,48 @@
 # Create endpoints
 import datetime
-import json
 import time
 
 import schedule
-from flask import app
 from flask import jsonify
 from flask_rest_jsonapi import Api
 
 from apis.nfo import NFODetail
 from apis.nfo import NFOList
-from apis.constants import fetch_data
 from apis.option_chain import OptionChainList, OptionChainDetail
-from apis.utils import get_computed_profit
-from models.nfo import NFO
+from apis.utils import get_computed_profit, get_constructed_data
 from models.option_chain import OptionChain
 from extensions import db
 
 
-def update_option_chain():
+def update_option_chain(symbol="BANKNIFTY"):
     print(f"dumping option chain at: {datetime.datetime.now().time()}")
-    res = fetch_data(symbol="BANKNIFTY")
-    binary_data_lst = res.json()["OptionChainInfo"]
+    constructed_data = get_constructed_data(symbol=symbol)
 
-    valid_columns = OptionChain.__table__.c.keys()
-    valid_columns.remove("date")
-    option_chain_db_id_list = [
-        r[0] for r in OptionChain.query.with_entities(OptionChain.id).all()
+    option_chain_db_stkprc_list = [
+        r[0]
+        for r in OptionChain.query.with_entities(OptionChain.strike, OptionChain.id)
+        .filter(OptionChain.symbol == symbol)
+        .all()
     ]
 
     update_mappings = []
-    insert_mappings = []
-    data_lst = json.loads(binary_data_lst)
-    for option_chain_data in data_lst:
-        if int(option_chain_data["id"]) in option_chain_db_id_list:
-            update_mappings.append(
-                {
-                    column: option_chain_data[column]
-                    if option_chain_data[column]
-                    else None
-                    for column in option_chain_data
-                    if column in valid_columns
-                }
-            )
-        else:
-            insert_mappings.append(
-                {
-                    column: option_chain_data[column]
-                    if option_chain_data[column]
-                    else None
-                    for column in option_chain_data
-                    if column in valid_columns
-                }
-            )
+    for strike, id in option_chain_db_stkprc_list:
+
+        if f"{strike}_pe" in constructed_data:
+            data_to_update = {
+                "id": id,
+                "peltp": constructed_data[f"{strike}_pe"],
+                "celtp": constructed_data[f"{strike}_ce"],
+            }
+
+            if strike == constructed_data["atm"]:
+                data_to_update.update({"atm": True})
+            update_mappings.append(data_to_update)
 
     db.session.bulk_update_mappings(OptionChain, update_mappings)
 
-    if insert_mappings:
-        db.session.bulk_insert_mappings(OptionChain, insert_mappings)
+    # if insert_mappings:
+    #     db.session.bulk_insert_mappings(OptionChain, insert_mappings)
 
     db.session.commit()
 
@@ -78,6 +63,7 @@ def register_base_routes(app):
     @app.route("/api/profit")
     def compute_profit():
         return get_computed_profit()
+
 
 def register_json_routes(app):
     api = Api(app)
