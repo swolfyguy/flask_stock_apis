@@ -1,3 +1,4 @@
+import json
 from datetime import datetime
 
 from apis.constants import fetch_data
@@ -163,13 +164,33 @@ def buy_or_sell_option(self, data: dict):
 
 
 def get_computed_profit(nfo_list=None):
-    constructed_data = get_constructed_data()
-    profit = 0
+    bank_nifty_constructed_data = get_constructed_data(symbol="BANKNIFTY")
+    nifty_constructed_data = get_constructed_data(symbol="NIFTY")
+
+    bank_nifty_profit = 0
+    nifty_profit = 0
+
     for nfo in NFO.query.all() if not nfo_list else nfo_list:
-        if nfo.profit:
-            profit += nfo.profit
+        if nfo.symbol == "BANKNIFTY":
+            if nfo.profit:
+                bank_nifty_profit = bank_nifty_profit + nfo.profit
+            else:
+                bank_nifty_profit = bank_nifty_profit + get_profit(
+                    nfo,
+                    float(
+                        bank_nifty_constructed_data[f"{nfo.strike}_{nfo.option_type}"]
+                    ),
+                )
         else:
-            profit = profit + get_profit(
-                nfo, float(constructed_data[f"{nfo.strike}_{nfo.option_type}"])
-            )
-    return str(round(profit, 2))
+            if nfo.profit:
+                nifty_profit = nifty_profit + nfo.profit
+            else:
+                nifty_profit = nifty_profit + get_profit(
+                    nfo,
+                    float(nifty_constructed_data[f"{nfo.strike}_{nfo.option_type}"]),
+                )
+
+    return {
+        "banknifty": str(round(bank_nifty_profit, 2)),
+        "nifty": str(round(nifty_profit, 2)),
+    }
