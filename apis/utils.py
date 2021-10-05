@@ -67,7 +67,12 @@ def get_constructed_data(symbol="BANKNIFTY"):
 def buy_or_sell_option(self, data: dict):
     # TODO fetch expiry from nse lib .
     current_time = datetime.now()
-    constructed_data = get_constructed_data(data["symbol"])
+    constructed_data = dict(
+        sorted(
+            get_constructed_data(data["symbol"]).items(),
+            key=lambda item: float(item[1]),
+        )
+    )
 
     last_trades = NFO.query.filter_by(
         strategy_id=data["strategy_id"],
@@ -120,18 +125,7 @@ def buy_or_sell_option(self, data: dict):
         # )[0]
         entry_price, strike = 0, 0
         for key, value in constructed_data.items():
-            if (
-                -50
-                < (
-                    (
-                        int(value)
-                        if data["option_type"] in key and isinstance(value, float)
-                        else 0
-                    )
-                    - int(strike_price)
-                )
-                < 100
-            ):
+            if -50 < (float(value) - float(strike_price)) < 100:
                 entry_price, strike = value, key.split("_")[0]
                 break
         data["entry_price"] = entry_price
@@ -146,9 +140,10 @@ def buy_or_sell_option(self, data: dict):
         #         options_data_lst,
         #     )
         # )[0]
-        strike = int(round(float(data["future_price"]) / 100) * 100)
-        data["strike"] = strike
-        data["entry_price"] = constructed_data[f'{strike}_{data["option_type"]}']
+        # strike = int(round(float(data["future_price"]) / 100) * 100)
+        strike = constructed_data['atm']
+        data["strike"] = int(float(strike))
+        data["entry_price"] = constructed_data[f'{strike.split(".")[0]}_{data["option_type"]}']
 
     if data.get("future_price"):
         del data["future_price"]
@@ -194,3 +189,9 @@ def get_computed_profit(nfo_list=None):
         "banknifty": str(round(bank_nifty_profit, 2)),
         "nifty": str(round(nifty_profit, 2)),
     }
+
+
+# wpp martin suarel
+#
+# vivek bharghava
+# dentsu
