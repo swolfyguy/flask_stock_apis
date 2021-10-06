@@ -166,75 +166,47 @@ def buy_or_sell_option(self, data: dict):
 
 
 def get_computed_profit(nfo_list=None):
-    bank_nifty_constructed_data = get_constructed_data(symbol="BANKNIFTY")
-    nifty_constructed_data = get_constructed_data(symbol="NIFTY")
+    symbols = ["BANKNIFTY", "NIFTY"]
 
-    bank_nifty_ongoing_profit = 0
-    bank_nifty_completed_profit = 0
-    bank_nifty_completed_trades = 0
-    bank_nifty_ongoing_trades = 0
+    result = {}
+    for symbol in symbols:
+        constructed_data = get_constructed_data(symbol=symbol)
 
-    nifty_ongoing_profit = 0
-    nifty_completed_profit = 0
-    nifty_completed_trades = 0
-    nifty_ongoing_trades = 0
+        ongoing_profit, completed_profit, completed_trades, ongoing_trades = 0, 0, 0, 0
 
-    for nfo in NFO.query.all() if not nfo_list else nfo_list:
-        if nfo.symbol == "BANKNIFTY":
+        for nfo in (
+            NFO.query.filter_by(symbol=symbol).all() if not nfo_list else nfo_list
+        ):
             if nfo.exited_at:
-                bank_nifty_completed_profit = bank_nifty_completed_profit + nfo.profit
-                bank_nifty_completed_trades += 1
+                completed_profit += nfo.profit
+                completed_trades += 1
             else:
-                bank_nifty_ongoing_profit = bank_nifty_ongoing_profit + get_profit(
+                ongoing_profit += get_profit(
                     nfo,
-                    float(
-                        bank_nifty_constructed_data[f"{nfo.strike}_{nfo.option_type}"]
-                    ),
+                    float(constructed_data[f"{nfo.strike}_{nfo.option_type}"]),
                 )
-                bank_nifty_ongoing_trades += 1
-        else:
-            if nfo.exited_at:
-                nifty_completed_profit = nifty_completed_profit + nfo.profit
-                nifty_completed_trades += 1
-            else:
-                nifty_ongoing_profit = nifty_ongoing_profit + get_profit(
-                    nfo,
-                    float(nifty_constructed_data[f"{nfo.strike}_{nfo.option_type}"]),
-                )
-                nifty_ongoing_trades += 1
+                ongoing_trades += 1
 
-    return {
-        "banknifty": {
-            "completed": {
-                "trades": bank_nifty_completed_trades,
-                "profit": round(bank_nifty_completed_profit, 2),
-            },
-            "on-going": {
-                "trades": bank_nifty_ongoing_trades,
-                "profit": round(bank_nifty_ongoing_profit, 2),
-            },
-            "total": {
-                "trades": bank_nifty_ongoing_trades + bank_nifty_completed_trades,
-                "profit": round(
-                    bank_nifty_completed_profit + bank_nifty_ongoing_profit, 2
-                ),
-            },
-        },
-        "nifty": {
-            "completed": {
-                "trades": nifty_completed_trades,
-                "profit": round(nifty_completed_profit, 2),
-            },
-            "on-going": {
-                "trades": nifty_ongoing_trades,
-                "profit": round(nifty_ongoing_profit, 2),
-            },
-            "total": {
-                "trades": nifty_ongoing_trades + nifty_completed_trades,
-                "profit": round(nifty_completed_profit + nifty_ongoing_profit, 2),
-            },
-        },
-    }
+        result.update(
+            {
+                symbol: {
+                    "completed": {
+                        "trades": completed_trades,
+                        "profit": round(completed_profit, 2),
+                    },
+                    "on-going": {
+                        "trades": ongoing_trades,
+                        "profit": round(ongoing_profit, 2),
+                    },
+                    "total": {
+                        "trades": ongoing_trades + completed_trades,
+                        "profit": round(completed_profit + ongoing_profit, 2),
+                    },
+                }
+            }
+        )
+
+    return result
 
 
 # wpp martin suarel
