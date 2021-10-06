@@ -13,7 +13,7 @@ from marshmallow import ValidationError
 from marshmallow_jsonapi.exceptions import IncorrectTypeError
 from sqlalchemy.orm.exc import NoResultFound
 
-from apis.utils import buy_or_sell_future, buy_or_sell_option, get_computed_profit
+from apis.utils import buy_or_sell_future, buy_or_sell_option
 from extensions import db
 from models.nfo import NFO
 from schema.nfo import NFOSchema
@@ -74,12 +74,6 @@ class NFOList(ResourceList):
         )
         add_pagination_links(
             result, objects_count, qs, url_for(self.view, _external=True, **view_kwargs)
-        )
-
-        result.update(
-            {
-                    "profit": get_computed_profit(),
-            }
         )
 
         final_result = self.after_get(result)

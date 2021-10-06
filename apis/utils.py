@@ -165,18 +165,21 @@ def buy_or_sell_option(self, data: dict):
     return last_trades, obj
 
 
-def get_computed_profit(nfo_list=None):
-    symbols = ["BANKNIFTY", "NIFTY"]
-
+def get_computed_profit():
+    bank_nifty_constructed_data = get_constructed_data(symbol="BANKNIFTY")
+    nifty_constructed_data = get_constructed_data(symbol="NIFTY")
     result = {}
-    for symbol in symbols:
-        constructed_data = get_constructed_data(symbol=symbol)
-
+    for strategy_id in (
+        NFO.query.with_entities(NFO.strategy_id).distinct(NFO.strategy_id).all()
+    ):
         ongoing_profit, completed_profit, completed_trades, ongoing_trades = 0, 0, 0, 0
+        for nfo in NFO.query.filter_by(strategy_id=strategy_id).all():
+            constructed_data = (
+                bank_nifty_constructed_data
+                if nfo.symbol == "BANKNIFTY"
+                else nifty_constructed_data
+            )
 
-        for nfo in (
-            NFO.query.filter_by(symbol=symbol).all() if not nfo_list else nfo_list
-        ):
             if nfo.exited_at:
                 completed_profit += nfo.profit
                 completed_trades += 1
@@ -189,7 +192,7 @@ def get_computed_profit(nfo_list=None):
 
         result.update(
             {
-                symbol: {
+                strategy_id[0]: {
                     "completed": {
                         "trades": completed_trades,
                         "profit": round(completed_profit, 2),
@@ -205,7 +208,6 @@ def get_computed_profit(nfo_list=None):
                 }
             }
         )
-
     return result
 
 
