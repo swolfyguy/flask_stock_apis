@@ -125,7 +125,10 @@ def buy_or_sell_option(self, data: dict):
         # )[0]
         entry_price, strike = 0, 0
         for key, value in constructed_data.items():
-            if data["option_type"] in key and -50 < (float(value) - float(strike_price)) < 100:
+            if (
+                data["option_type"] in key
+                and -50 < (float(value) - float(strike_price)) < 100
+            ):
                 entry_price, strike = value, key.split("_")[0]
                 break
         data["entry_price"] = entry_price
@@ -155,6 +158,8 @@ def buy_or_sell_option(self, data: dict):
             data["quantity"] if data["action"] == "buy" else -data["quantity"]
         )
         del data["action"]
+
+    data["placed_at"] = current_time
 
     obj = self.create_object(data, kwargs={})
     return last_trades, obj
@@ -200,29 +205,33 @@ def get_computed_profit(nfo_list=None):
 
     return {
         "banknifty": {
-            "profit": {
-                "completed": round(bank_nifty_completed_profit, 2),
-                "on-going": round(bank_nifty_ongoing_profit, 2),
-                "total": round(
+            "completed": {
+                "trades": bank_nifty_completed_trades,
+                "profit": round(bank_nifty_completed_profit, 2),
+            },
+            "on-going": {
+                "trades": bank_nifty_ongoing_trades,
+                "profit": round(bank_nifty_ongoing_profit, 2),
+            },
+            "total": {
+                "trades": bank_nifty_ongoing_trades + bank_nifty_completed_trades,
+                "profit": round(
                     bank_nifty_completed_profit + bank_nifty_ongoing_profit, 2
                 ),
             },
-            "trades": {
-                "completed": bank_nifty_completed_trades,
-                "on-going": bank_nifty_ongoing_trades,
-                "total": bank_nifty_ongoing_trades + bank_nifty_completed_trades,
-            },
         },
         "nifty": {
-            "profit": {
-                "completed": round(nifty_completed_profit, 2),
-                "on-going": round(nifty_ongoing_profit, 2),
-                "total": round(nifty_completed_profit + nifty_ongoing_profit, 2),
+            "completed": {
+                "trades": nifty_completed_trades,
+                "profit": round(nifty_completed_profit, 2),
             },
-            "trades": {
-                "completed": nifty_completed_trades,
-                "on-going": nifty_ongoing_trades,
-                "total": nifty_completed_trades + nifty_ongoing_trades,
+            "on-going": {
+                "trades": nifty_ongoing_trades,
+                "profit": round(nifty_ongoing_profit, 2),
+            },
+            "total": {
+                "trades": nifty_ongoing_trades + nifty_completed_trades,
+                "profit": round(nifty_completed_profit + nifty_ongoing_profit, 2),
             },
         },
     }
