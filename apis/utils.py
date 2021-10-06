@@ -125,7 +125,7 @@ def buy_or_sell_option(self, data: dict):
         # )[0]
         entry_price, strike = 0, 0
         for key, value in constructed_data.items():
-            if -50 < (float(value) - float(strike_price)) < 100:
+            if data["option_type"] in key and -50 < (float(value) - float(strike_price)) < 100:
                 entry_price, strike = value, key.split("_")[0]
                 break
         data["entry_price"] = entry_price
@@ -141,9 +141,11 @@ def buy_or_sell_option(self, data: dict):
         #     )
         # )[0]
         # strike = int(round(float(data["future_price"]) / 100) * 100)
-        strike = constructed_data['atm']
+        strike = constructed_data["atm"]
         data["strike"] = int(float(strike))
-        data["entry_price"] = constructed_data[f'{strike.split(".")[0]}_{data["option_type"]}']
+        data["entry_price"] = constructed_data[
+            f'{strike.split(".")[0]}_{data["option_type"]}'
+        ]
 
     if data.get("future_price"):
         del data["future_price"]
@@ -162,32 +164,67 @@ def get_computed_profit(nfo_list=None):
     bank_nifty_constructed_data = get_constructed_data(symbol="BANKNIFTY")
     nifty_constructed_data = get_constructed_data(symbol="NIFTY")
 
-    bank_nifty_profit = 0
-    nifty_profit = 0
+    bank_nifty_ongoing_profit = 0
+    bank_nifty_completed_profit = 0
+    bank_nifty_completed_trades = 0
+    bank_nifty_ongoing_trades = 0
+
+    nifty_ongoing_profit = 0
+    nifty_completed_profit = 0
+    nifty_completed_trades = 0
+    nifty_ongoing_trades = 0
 
     for nfo in NFO.query.all() if not nfo_list else nfo_list:
         if nfo.symbol == "BANKNIFTY":
-            if nfo.profit:
-                bank_nifty_profit = bank_nifty_profit + nfo.profit
+            if nfo.exited_at:
+                bank_nifty_completed_profit = bank_nifty_completed_profit + nfo.profit
+                bank_nifty_completed_trades += 1
             else:
-                bank_nifty_profit = bank_nifty_profit + get_profit(
+                bank_nifty_ongoing_profit = bank_nifty_ongoing_profit + get_profit(
                     nfo,
                     float(
                         bank_nifty_constructed_data[f"{nfo.strike}_{nfo.option_type}"]
                     ),
                 )
+                bank_nifty_ongoing_trades += 1
         else:
-            if nfo.profit:
-                nifty_profit = nifty_profit + nfo.profit
+            if nfo.exited_at:
+                nifty_completed_profit = nifty_completed_profit + nfo.profit
+                nifty_completed_trades += 1
             else:
-                nifty_profit = nifty_profit + get_profit(
+                nifty_ongoing_profit = nifty_ongoing_profit + get_profit(
                     nfo,
                     float(nifty_constructed_data[f"{nfo.strike}_{nfo.option_type}"]),
                 )
+                nifty_ongoing_trades += 1
 
     return {
-        "banknifty": str(round(bank_nifty_profit, 2)),
-        "nifty": str(round(nifty_profit, 2)),
+        "banknifty": {
+            "profit": {
+                "completed": round(bank_nifty_completed_profit, 2),
+                "on-going": round(bank_nifty_ongoing_profit, 2),
+                "total": round(
+                    bank_nifty_completed_profit + bank_nifty_ongoing_profit, 2
+                ),
+            },
+            "trades": {
+                "completed": bank_nifty_completed_trades,
+                "on-going": bank_nifty_ongoing_trades,
+                "total": bank_nifty_ongoing_trades + bank_nifty_completed_trades,
+            },
+        },
+        "nifty": {
+            "profit": {
+                "completed": round(nifty_completed_profit, 2),
+                "on-going": round(nifty_ongoing_profit, 2),
+                "total": round(nifty_completed_profit + nifty_ongoing_profit, 2),
+            },
+            "trades": {
+                "completed": nifty_completed_trades,
+                "on-going": nifty_ongoing_trades,
+                "total": nifty_completed_trades + nifty_ongoing_trades,
+            },
+        },
     }
 
 
