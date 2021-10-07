@@ -1,7 +1,7 @@
 import requests
 
 
-def fetch_data(symbol="BANKNIFTY", expiry="07 OCT 2021"):
+def fetch_data(symbol="BANKNIFTY", expiry="14 OCT 2021"):
     return requests.post(
         "https://ewmw.edelweiss.in/api/Market/optionchaindetails",
         data={"exp": f"{expiry}", "aTyp": "OPTIDX", "uSym": f"{symbol}"},
