@@ -214,6 +214,9 @@ def get_computed_profit():
 def close_all_trades():
     bank_nifty_constructed_data = get_constructed_data(symbol="BANKNIFTY")
     nifty_constructed_data = get_constructed_data(symbol="NIFTY")
+
+    update_mappings = []
+    exited_at = datetime.now()
     for strategy_id in (
         NFO.query.with_entities(NFO.strategy_id).distinct(NFO.strategy_id).all()
     ):
@@ -223,11 +226,19 @@ def close_all_trades():
                 if nfo.symbol == "BANKNIFTY"
                 else nifty_constructed_data
             )
-            nfo.profit = get_profit(
+            profit = get_profit(
                     nfo,
                     float(constructed_data[f"{nfo.strike}_{nfo.option_type}"]),
                 )
-            db.session.commit()
+            update_mapping = {
+                "id": nfo.id,
+                "profit": profit,
+                "exited_at": exited_at
+            }
+            update_mappings.append(update_mapping)
+
+    db.session.bulk_update_mappings(NFO, update_mappings)
+    db.session.commit()
 
     return "All trades closed successfully"
 
