@@ -211,6 +211,27 @@ def get_computed_profit():
     return result
 
 
+def close_all_trades():
+    bank_nifty_constructed_data = get_constructed_data(symbol="BANKNIFTY")
+    nifty_constructed_data = get_constructed_data(symbol="NIFTY")
+    for strategy_id in (
+        NFO.query.with_entities(NFO.strategy_id).distinct(NFO.strategy_id).all()
+    ):
+        for nfo in NFO.query.filter_by(strategy_id=strategy_id, exited_at=None).all():
+            constructed_data = (
+                bank_nifty_constructed_data
+                if nfo.symbol == "BANKNIFTY"
+                else nifty_constructed_data
+            )
+            nfo.profit = get_profit(
+                    nfo,
+                    float(constructed_data[f"{nfo.strike}_{nfo.option_type}"]),
+                )
+            db.session.commit()
+
+    return "All trades closed successfully"
+
+
 # wpp martin suarel
 #
 # vivek bharghava

@@ -9,7 +9,7 @@ from flask_rest_jsonapi import Api
 from apis.nfo import NFODetail
 from apis.nfo import NFOList
 from apis.option_chain import OptionChainList, OptionChainDetail
-from apis.utils import get_computed_profit, get_constructed_data
+from apis.utils import get_computed_profit, get_constructed_data, close_all_trades
 from models.option_chain import OptionChain
 from extensions import db
 
@@ -63,6 +63,10 @@ def register_base_routes(app):
     @app.route("/api/profit")
     def compute_profit():
         return get_computed_profit()
+
+    @app.route("/api/close_trades")
+    def close_trades():
+        return close_all_trades()
 
 
 def register_json_routes(app):
