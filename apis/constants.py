@@ -1,10 +1,10 @@
 import requests
 
 
-def fetch_data(symbol="BANKNIFTY", expiry="14 OCT 2021"):
+def fetch_data(symbol="BANKNIFTY", expiry="14 OCT 2021", atyp="OPTIDX"):
     return requests.post(
         "https://ewmw.edelweiss.in/api/Market/optionchaindetails",
-        data={"exp": f"{expiry}", "aTyp": "OPTIDX", "uSym": f"{symbol}"},
+        data={"exp": expiry, "aTyp": atyp, "uSym": symbol},
     ).json()["opChn"]
 
     # TODO do not remove this unless you are confident that above code will work for atleast 15 days

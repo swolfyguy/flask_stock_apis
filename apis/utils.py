@@ -1,6 +1,8 @@
 import json
 from datetime import datetime
 
+from flask import jsonify
+
 from apis.constants import fetch_data
 from extensions import db
 from models.nfo import NFO
@@ -144,11 +146,14 @@ def buy_or_sell_option(self, data: dict):
         #     )
         # )[0]
         # strike = int(round(float(data["future_price"]) / 100) * 100)
-        strike = constructed_data["atm"]
-        data["strike"] = int(float(strike))
-        data["entry_price"] = constructed_data[
-            f'{strike.split(".")[0]}_{data["option_type"]}'
-        ]
+        if data["symbole"] in ["BANKNIFTY", "NIFTY"]:
+            strike = constructed_data["atm"]
+            data["strike"] = int(float(strike))
+            data["entry_price"] = constructed_data[
+                f'{strike.split(".")[0]}_{data["option_type"]}'
+            ]
+        else:
+            pass
 
     if data.get("future_price"):
         del data["future_price"]
@@ -168,7 +173,13 @@ def buy_or_sell_option(self, data: dict):
 def get_computed_profit():
     bank_nifty_constructed_data = get_constructed_data(symbol="BANKNIFTY")
     nifty_constructed_data = get_constructed_data(symbol="NIFTY")
-    result = {}
+    result = []
+    strategy_id_name_dct = {
+        1: "BankNifty Pyramiding_1",
+        2: "Nifty50 Pyramiding_1",
+        3: "BankNifty Pyramiding_10",
+        4: "Nifty50 Pyramiding_10"
+    }
     for strategy_id in (
         NFO.query.with_entities(NFO.strategy_id).distinct(NFO.strategy_id).all()
     ):
@@ -190,25 +201,25 @@ def get_computed_profit():
                 )
                 ongoing_trades += 1
 
-        result.update(
+        result.append(
             {
-                strategy_id[0]: {
-                    "completed": {
-                        "trades": completed_trades,
-                        "profit": round(completed_profit, 2),
-                    },
-                    "on-going": {
-                        "trades": ongoing_trades,
-                        "profit": round(ongoing_profit, 2),
-                    },
-                    "total": {
-                        "trades": ongoing_trades + completed_trades,
-                        "profit": round(completed_profit + ongoing_profit, 2),
-                    },
-                }
+                "id": strategy_id[0],
+                "name": strategy_id_name_dct[strategy_id[0]],
+                "completed": {
+                    "trades": completed_trades,
+                    "profit": round(completed_profit, 2),
+                },
+                "on_going": {
+                    "trades": ongoing_trades,
+                    "profit": round(ongoing_profit, 2),
+                },
+                "total": {
+                    "trades": ongoing_trades + completed_trades,
+                    "profit": round(completed_profit + ongoing_profit, 2),
+                },
             }
         )
-    return result
+    return jsonify(result)
 
 
 def close_all_trades():
@@ -227,14 +238,10 @@ def close_all_trades():
                 else nifty_constructed_data
             )
             profit = get_profit(
-                    nfo,
-                    float(constructed_data[f"{nfo.strike}_{nfo.option_type}"]),
-                )
-            update_mapping = {
-                "id": nfo.id,
-                "profit": profit,
-                "exited_at": exited_at
-            }
+                nfo,
+                float(constructed_data[f"{nfo.strike}_{nfo.option_type}"]),
+            )
+            update_mapping = {"id": nfo.id, "profit": profit, "exited_at": exited_at}
             update_mappings.append(update_mapping)
 
     db.session.bulk_update_mappings(NFO, update_mappings)
