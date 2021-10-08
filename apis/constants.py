@@ -1,7 +1,21 @@
 import requests
 
+strategy_id_name_dct = {
+    1: "BankNifty Pyramiding_1",
+    2: "Nifty50 Pyramiding_1",
+    3: "BankNifty Pyramiding_10",
+    4: "Nifty50 Pyramiding_10",
+}
 
-def fetch_data(symbol="BANKNIFTY", expiry="14 OCT 2021", atyp="OPTIDX"):
+
+def fetch_data(symbol="BANKNIFTY", expiry="14 OCT 2021"):
+    if symbol in ["BANKNIFTY", "NIFTY"]:
+        atyp = "OPTIDX"
+        expiry = expiry
+    else:
+        atyp = "OPTSTK"
+        expiry = "28 OCT 2021"
+
     return requests.post(
         "https://ewmw.edelweiss.in/api/Market/optionchaindetails",
         data={"exp": expiry, "aTyp": atyp, "uSym": symbol},

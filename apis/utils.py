@@ -1,9 +1,8 @@
-import json
 from datetime import datetime
 
 from flask import jsonify
 
-from apis.constants import fetch_data
+from apis.constants import fetch_data, strategy_id_name_dct
 from extensions import db
 from models.nfo import NFO
 
@@ -146,14 +145,22 @@ def buy_or_sell_option(self, data: dict):
         #     )
         # )[0]
         # strike = int(round(float(data["future_price"]) / 100) * 100)
-        if data["symbole"] in ["BANKNIFTY", "NIFTY"]:
+        if data["symbol"] in ["BANKNIFTY", "NIFTY"]:
             strike = constructed_data["atm"]
             data["strike"] = int(float(strike))
             data["entry_price"] = constructed_data[
                 f'{strike.split(".")[0]}_{data["option_type"]}'
             ]
         else:
-            pass
+            options_data_lst = fetch_data(data["symbol"])
+            atm_strike = None
+            max_vol = 0
+            for option_data in options_data_lst:
+                if option_data["atm"]:
+                    atm_strike = option_data["stkPrc"]
+
+                if option_data[data["option_data"]]:
+                    pass
 
     if data.get("future_price"):
         del data["future_price"]
@@ -174,12 +181,7 @@ def get_computed_profit():
     bank_nifty_constructed_data = get_constructed_data(symbol="BANKNIFTY")
     nifty_constructed_data = get_constructed_data(symbol="NIFTY")
     result = []
-    strategy_id_name_dct = {
-        1: "BankNifty Pyramiding_1",
-        2: "Nifty50 Pyramiding_1",
-        3: "BankNifty Pyramiding_10",
-        4: "Nifty50 Pyramiding_10"
-    }
+
     for strategy_id in (
         NFO.query.with_entities(NFO.strategy_id).distinct(NFO.strategy_id).all()
     ):

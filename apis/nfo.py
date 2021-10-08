@@ -23,30 +23,29 @@ log = logging.getLogger(__file__)
 
 class NFODetail(ResourceDetail):
     # ignore below code its dummy
-    def before_get_object(self, view_kwargs):
-        if view_kwargs.get("computer_id") is not None:
-            try:
-                computer = (
-                    self.session.query(NFO)
-                    .filter_by(id=view_kwargs["computer_id"])
-                    .one()
-                )
-            except NoResultFound:
-                raise ObjectNotFound(
-                    {"parameter": "computer_id"},
-                    "Computer: {} not found".format(view_kwargs["computer_id"]),
-                )
-            else:
-                if computer.person is not None:
-                    view_kwargs["id"] = computer.person.id
-                else:
-                    view_kwargs["id"] = None
+    # def before_get_object(self, view_kwargs):
+    #     if view_kwargs.get("computer_id") is not None:
+    #         try:
+    #             computer = (
+    #                 self.session.query(NFO)
+    #                 .filter_by(id=view_kwargs["computer_id"])
+    #                 .one()
+    #             )
+    #         except NoResultFound:
+    #             raise ObjectNotFound(
+    #                 {"parameter": "computer_id"},
+    #                 "Computer: {} not found".format(view_kwargs["computer_id"]),
+    #             )
+    #         else:
+    #             if computer.person is not None:
+    #                 view_kwargs["id"] = computer.person.id
+    #             else:
+    #                 view_kwargs["id"] = None
 
     schema = NFOSchema
     data_layer = {
         "session": db.session,
         "model": NFO,
-        "methods": {"before_get_object": before_get_object},
     }
 
 
