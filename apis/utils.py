@@ -59,7 +59,7 @@ def get_constructed_data(symbol="BANKNIFTY"):
             }
         )
 
-        if option_data["atm"] == True:
+        if option_data["atm"]:
             constructed_data.update({"atm": option_data["stkPrc"]})
 
     return constructed_data
@@ -103,27 +103,8 @@ def buy_or_sell_option(self, data: dict):
     strike_price = data.get("strike_price")
     strike = data.get("strike")
     if strike:
-        # strike_option_data = list(
-        #     filter(
-        #         lambda option_data: option_data["strike"] == strike, options_data_lst
-        #     )
-        # )[0]
-        # data["entry_price"] = strike_option_data[f"{data['option_type']}ltp"]
         data["entry_price"] = constructed_data[f'{strike}_{data["option_type"]}']
     elif strike_price:
-        # strike_option_data = list(
-        #     filter(
-        #         lambda option_data: -50
-        #         < (
-        #             int(option_data[f"{data['option_type']}ltp"])
-        #             if isinstance(option_data[f"{data['option_type']}ltp"], float)
-        #             else 0
-        #         )
-        #         - int(strike_price)
-        #         < 100,
-        #         options_data_lst,
-        #     )
-        # )[0]
         entry_price, strike = 0, 0
         for key, value in constructed_data.items():
             if (
@@ -137,14 +118,6 @@ def buy_or_sell_option(self, data: dict):
         # strike_price doesnt make entry to database its only for selection of exact strike price which is entry price
         del data["strike_price"]
     else:
-        # strike_option_data = list(
-        #     filter(
-        #         lambda option_data: option_data[f"{data['option_type']}status"]
-        #         == "ATM",
-        #         options_data_lst,
-        #     )
-        # )[0]
-        # strike = int(round(float(data["future_price"]) / 100) * 100)
         if data["symbol"] in ["BANKNIFTY", "NIFTY"]:
             strike = constructed_data["atm"]
             data["strike"] = int(float(strike))
@@ -152,15 +125,28 @@ def buy_or_sell_option(self, data: dict):
                 f'{strike.split(".")[0]}_{data["option_type"]}'
             ]
         else:
+            # TODO not completed yet, need to decide which one to buy atm or with most vol
+
             options_data_lst = fetch_data(data["symbol"])
             atm_strike = None
+            atm_strike_price = 0
             max_vol = 0
+            max_vol_strike = None
+            max_vol_strike_price = None
             for option_data in options_data_lst:
                 if option_data["atm"]:
                     atm_strike = option_data["stkPrc"]
+                    atm_strike_price = option_data[f'{data["option_type"]}Qt']["ltp"]
 
-                if option_data[data["option_data"]]:
-                    pass
+                option_vol = option_data[f'{data["option_type"]}Qt']["vol"]
+                if max_vol < option_vol:
+                    max_vol = option_vol
+                    max_vol_strike = option_data["stkPrc"]
+                    max_vol_strike_price = option_data[f'{data["option_type"]}Qt'][
+                        "ltp"
+                    ]
+
+            data["strike"] = int(float(strike))
 
     if data.get("future_price"):
         del data["future_price"]
