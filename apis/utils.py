@@ -137,16 +137,18 @@ def buy_or_sell_option(self, data: dict):
                 if option_data["atm"]:
                     atm_strike = option_data["stkPrc"]
                     atm_strike_price = option_data[f'{data["option_type"]}Qt']["ltp"]
+                    break
 
-                option_vol = option_data[f'{data["option_type"]}Qt']["vol"]
-                if max_vol < option_vol:
-                    max_vol = option_vol
-                    max_vol_strike = option_data["stkPrc"]
-                    max_vol_strike_price = option_data[f'{data["option_type"]}Qt'][
-                        "ltp"
-                    ]
+                # option_vol = float(option_data[f'{data["option_type"]}Qt']["vol"])
+                # if max_vol < option_vol:
+                #     max_vol = option_vol
+                #     max_vol_strike = option_data["stkPrc"]
+                #     max_vol_strike_price = option_data[f'{data["option_type"]}Qt'][
+                #         "ltp"
+                #     ]
 
-            data["strike"] = int(float(strike))
+            data["strike"] = int(float(atm_strike))
+            data["entry_price"] = atm_strike_price
 
     if data.get("future_price"):
         del data["future_price"]
