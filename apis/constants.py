@@ -6,7 +6,8 @@ strategy_id_name_dct = {
     3: "BankNifty Pyramiding_10",
     4: "Nifty50 Pyramiding_10",
     5: "BajFinance Pyramiding_10",
-    6: "AxisBank Pyramiding_10"
+    6: "AxisBank Pyramiding_10",
+    7: "TataMotors Pyramiding_10"
 }
 
 
