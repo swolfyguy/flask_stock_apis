@@ -168,6 +168,9 @@ def buy_or_sell_option(self, data: dict):
 def get_computed_profit():
     bank_nifty_constructed_data = get_constructed_data(symbol="BANKNIFTY")
     nifty_constructed_data = get_constructed_data(symbol="NIFTY")
+    axis_bank_constructed_data = get_constructed_data(symbol="AXISBANK")
+    bajaj_finance_constructed_data = get_constructed_data(symbol="BAJFINANCE")
+    tata_motors_constructed_data = get_constructed_data(symbol="TATAMOTORS")
     result = []
 
     for strategy_id in (
@@ -175,11 +178,16 @@ def get_computed_profit():
     ):
         ongoing_profit, completed_profit, completed_trades, ongoing_trades = 0, 0, 0, 0
         for nfo in NFO.query.filter_by(strategy_id=strategy_id).all():
-            constructed_data = (
-                bank_nifty_constructed_data
-                if nfo.symbol == "BANKNIFTY"
-                else nifty_constructed_data
-            )
+            if nfo.symbol == "BANKNIFTY":
+                constructed_data = bank_nifty_constructed_data
+            elif nfo.symbol == "NIFTY":
+                constructed_data = nifty_constructed_data
+            elif nfo.symbol == "AXISBANK":
+                constructed_data = axis_bank_constructed_data
+            elif nfo.symbol == "TATAMOTORS":
+                constructed_data = tata_motors_constructed_data
+            elif nfo.symbol == "BAJFINANCE":
+                constructed_data = bajaj_finance_constructed_data
 
             if nfo.exited_at:
                 completed_profit += nfo.profit
