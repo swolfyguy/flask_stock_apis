@@ -171,12 +171,16 @@ def get_computed_profit():
     axis_bank_constructed_data = get_constructed_data(symbol="AXISBANK")
     bajaj_finance_constructed_data = get_constructed_data(symbol="BAJFINANCE")
     tata_motors_constructed_data = get_constructed_data(symbol="TATAMOTORS")
-    result = []
+    data = []
 
+    total_profits = 0
+    total_completed_profits = 0
+    total_ongoing_profits = 0
     for strategy_id in (
         NFO.query.with_entities(NFO.strategy_id).distinct(NFO.strategy_id).all()
     ):
         ongoing_profit, completed_profit, completed_trades, ongoing_trades = 0, 0, 0, 0
+
         for nfo in NFO.query.filter_by(strategy_id=strategy_id).all():
             if nfo.symbol == "BANKNIFTY":
                 constructed_data = bank_nifty_constructed_data
@@ -197,9 +201,14 @@ def get_computed_profit():
                     nfo,
                     float(constructed_data[f"{nfo.strike}_{nfo.option_type}"]),
                 )
+
                 ongoing_trades += 1
 
-        result.append(
+        total_strategy_profits = completed_profit + ongoing_profit
+        total_profits += total_strategy_profits
+        total_completed_profits += completed_profit
+        total_ongoing_profits += ongoing_profit
+        data.append(
             {
                 "id": strategy_id[0],
                 "name": strategy_id_name_dct[strategy_id[0]],
@@ -213,11 +222,20 @@ def get_computed_profit():
                 },
                 "total": {
                     "trades": ongoing_trades + completed_trades,
-                    "profit": round(completed_profit + ongoing_profit, 2),
+                    "profit": round(total_strategy_profits, 2),
                 },
             }
         )
-    return jsonify(result)
+
+    result = {
+        "data": data,
+        "meta": {
+            "total_profits": round(total_profits, 2),
+            "total_completed_profits": round(total_completed_profits, 2),
+            "total_ongoing_profits": round(total_ongoing_profits, 2),
+        },
+    }
+    return result
 
 
 def close_all_trades():
