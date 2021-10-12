@@ -36,3 +36,4 @@ class NFOSchema(Schema):
     # Temporary fields which doesnt have existence in db
     symbol = fields.String()  # TODO move it to models later
     strike_price = fields.Float(load_only=True)
+    atm = fields.Boolean(load_only=True)

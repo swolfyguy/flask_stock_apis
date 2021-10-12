@@ -8,21 +8,9 @@ strategy_id_name_dct = {
     5: "BajFinance Pyramiding_10",
     6: "AxisBank Pyramiding_10",
     7: "TataMotors Pyramiding_10",
+    8: "SBI Pyramiding_10_atm",
+    9: "SBI Pyramiding_10_vol"
 }
-
-
-def fetch_data(symbol="BANKNIFTY", expiry="14 OCT 2021"):
-    if symbol in ["BANKNIFTY", "NIFTY"]:
-        atyp = "OPTIDX"
-        expiry = expiry
-    else:
-        atyp = "OPTSTK"
-        expiry = "28 OCT 2021"
-
-    return requests.post(
-        "https://ewmw.edelweiss.in/api/Market/optionchaindetails",
-        data={"exp": expiry, "aTyp": atyp, "uSym": symbol},
-    ).json()["opChn"]
 
     # TODO do not remove this unless you are confident that above code will work for atleast 15 days
     # expiry = "30SEP2021"

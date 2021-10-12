@@ -1,8 +1,8 @@
 from datetime import datetime
 
-from flask import jsonify
+import requests
 
-from apis.constants import fetch_data, strategy_id_name_dct
+from apis.constants import strategy_id_name_dct
 from extensions import db
 from models.nfo import NFO
 
@@ -118,7 +118,7 @@ def buy_or_sell_option(self, data: dict):
         # strike_price doesnt make entry to database its only for selection of exact strike price which is entry price
         del data["strike_price"]
     else:
-        if data["symbol"] in ["BANKNIFTY", "NIFTY"]:
+        if data["symbol"] in ["BANKNIFTY", "NIFTY"] or data.get("atm"):
             strike = constructed_data["atm"]
             data["strike"] = int(float(strike))
             data["entry_price"] = constructed_data[
@@ -126,29 +126,21 @@ def buy_or_sell_option(self, data: dict):
             ]
         else:
             # TODO not completed yet, need to decide which one to buy atm or with most vol
-
             options_data_lst = fetch_data(data["symbol"])
-            atm_strike = None
-            atm_strike_price = 0
             max_vol = 0
             max_vol_strike = None
             max_vol_strike_price = None
             for option_data in options_data_lst:
-                if option_data["atm"]:
-                    atm_strike = option_data["stkPrc"]
-                    atm_strike_price = option_data[f'{data["option_type"]}Qt']["ltp"]
-                    break
+                option_vol = float(option_data[f'{data["option_type"]}Qt']["vol"])
+                if option_vol > max_vol:
+                    max_vol = option_vol
+                    max_vol_strike = option_data["stkPrc"]
+                    max_vol_strike_price = option_data[f'{data["option_type"]}Qt'][
+                        "ltp"
+                    ]
 
-                # option_vol = float(option_data[f'{data["option_type"]}Qt']["vol"])
-                # if max_vol < option_vol:
-                #     max_vol = option_vol
-                #     max_vol_strike = option_data["stkPrc"]
-                #     max_vol_strike_price = option_data[f'{data["option_type"]}Qt'][
-                #         "ltp"
-                #     ]
-
-            data["strike"] = int(float(atm_strike))
-            data["entry_price"] = atm_strike_price
+            data["strike"] = int(float(max_vol_strike))
+            data["entry_price"] = max_vol_strike_price
 
     if data.get("future_price"):
         del data["future_price"]
@@ -158,6 +150,9 @@ def buy_or_sell_option(self, data: dict):
             data["quantity"] if data["action"] == "buy" else -data["quantity"]
         )
         del data["action"]
+
+    if data.get("atm"):
+        del data["atm"]
 
     data["placed_at"] = current_time
 
@@ -171,6 +166,7 @@ def get_computed_profit():
     axis_bank_constructed_data = get_constructed_data(symbol="AXISBANK")
     bajaj_finance_constructed_data = get_constructed_data(symbol="BAJFINANCE")
     tata_motors_constructed_data = get_constructed_data(symbol="TATAMOTORS")
+    sbi_constructed_data = get_constructed_data(symbol="SBIN")
     data = []
 
     total_profits = 0
@@ -192,6 +188,8 @@ def get_computed_profit():
                 constructed_data = tata_motors_constructed_data
             elif nfo.symbol == "BAJFINANCE":
                 constructed_data = bajaj_finance_constructed_data
+            elif nfo.symbol == "SBIN":
+                constructed_data = sbi_constructed_data
 
             if nfo.exited_at:
                 completed_profit += nfo.profit
@@ -264,6 +262,20 @@ def close_all_trades():
     db.session.commit()
 
     return "All trades closed successfully"
+
+
+def fetch_data(symbol="BANKNIFTY", expiry="14 OCT 2021"):
+    if symbol in ["BANKNIFTY", "NIFTY"]:
+        atyp = "OPTIDX"
+        expiry = expiry
+    else:
+        atyp = "OPTSTK"
+        expiry = "28 OCT 2021"
+
+    return requests.post(
+        "https://ewmw.edelweiss.in/api/Market/optionchaindetails",
+        data={"exp": expiry, "aTyp": atyp, "uSym": symbol},
+    ).json()["opChn"]
 
 
 # wpp martin suarel
