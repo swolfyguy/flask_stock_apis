@@ -77,3 +77,11 @@ def lambda_handler(event, context):
         'statusCode': statusCode,
         'body': json.dumps(message)
     }
+
+
+def lambda_handler_practice(event, context):
+    """
+    Query Card information
+    """
+
+    pass
