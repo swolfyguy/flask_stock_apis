@@ -2,7 +2,7 @@ from datetime import datetime
 
 import requests
 
-from apis.constants import strategy_id_name_dct
+from apis.constants import strategy_id_name_dct, strategy_symbol_dict
 from extensions import db
 from models.nfo import NFO
 
@@ -160,26 +160,36 @@ def buy_or_sell_option(self, data: dict):
     return last_trades, obj
 
 
-def get_computed_profit():
-    bank_nifty_constructed_data = get_constructed_data(symbol="BANKNIFTY")
-    nifty_constructed_data = get_constructed_data(symbol="NIFTY")
-    axis_bank_constructed_data = get_constructed_data(symbol="AXISBANK")
-    bajaj_finance_constructed_data = get_constructed_data(symbol="BAJFINANCE")
-    tata_motors_constructed_data = get_constructed_data(symbol="TATAMOTORS")
-    sbi_constructed_data = get_constructed_data(symbol="SBIN")
-    adanient_constructed_data = get_constructed_data(symbol="ADANIENT")
+def get_computed_profit(strategy_id=None):
+    if strategy_id:
+        constructed_data = get_constructed_data(
+            symbol=strategy_symbol_dict[int(strategy_id)]
+        )
+    else:
+        bank_nifty_constructed_data = get_constructed_data(symbol="BANKNIFTY")
+        nifty_constructed_data = get_constructed_data(symbol="NIFTY")
+        axis_bank_constructed_data = get_constructed_data(symbol="AXISBANK")
+        bajaj_finance_constructed_data = get_constructed_data(symbol="BAJFINANCE")
+        tata_motors_constructed_data = get_constructed_data(symbol="TATAMOTORS")
+        sbi_constructed_data = get_constructed_data(symbol="SBIN")
+        adanient_constructed_data = get_constructed_data(symbol="ADANIENT")
+
     data = []
 
     total_profits = 0
     total_completed_profits = 0
     total_ongoing_profits = 0
-    for strategy_id in (
-        NFO.query.with_entities(NFO.strategy_id).distinct(NFO.strategy_id).all()
+    for _strategy_id in (
+        [strategy_id]
+        if strategy_id
+        else (NFO.query.with_entities(NFO.strategy_id).distinct(NFO.strategy_id).all())
     ):
         ongoing_profit, completed_profit, completed_trades, ongoing_trades = 0, 0, 0, 0
 
-        for nfo in NFO.query.filter_by(strategy_id=strategy_id).all():
-            if nfo.symbol == "BANKNIFTY":
+        for nfo in NFO.query.filter_by(strategy_id=_strategy_id).all():
+            if strategy_id:
+                constructed_data = constructed_data
+            elif nfo.symbol == "BANKNIFTY":
                 constructed_data = bank_nifty_constructed_data
             elif nfo.symbol == "NIFTY":
                 constructed_data = nifty_constructed_data
@@ -211,8 +221,8 @@ def get_computed_profit():
         total_ongoing_profits += ongoing_profit
         data.append(
             {
-                "id": strategy_id[0],
-                "name": strategy_id_name_dct[strategy_id[0]],
+                "id": _strategy_id[0],
+                "name": strategy_id_name_dct[int(_strategy_id[0])],
                 "completed": {
                     "trades": completed_trades,
                     "profit": round(completed_profit, 2),

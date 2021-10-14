@@ -17,6 +17,23 @@ strategy_id_name_dct = {
     11: "AdaniEnterprises Pyr_10_atm",
 }
 
+strategy_symbol_dict = {
+    1: "BANKNIFTY",
+    2: "NIFTY",
+    3: "BANKNIFTY",
+    4: "NIFTY",
+    5: "BAJFINANCE",
+    15: "BAJFINANCE",
+    6: "AXISBANK",
+    16: "AXISBANK",
+    7: "TATAMOTORS",
+    17: "TATAMOTORS",
+    8: "SBIN",
+    9: "SBIN",
+    10: "ADANIENT",
+    11: "ADANIENT",
+}
+
 # TODO do not remove this unless you are confident that above code will work for atleast 15 days
 # expiry = "30SEP2021"
 # url = f"https://vbiz.in/optionchain/foc.php?symbol={symbol}&expiry={expiry}"
