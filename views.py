@@ -64,6 +64,10 @@ def register_base_routes(app):
     def compute_profit():
         return get_computed_profit()
 
+    @app.route("/api/close_trades/<strategy_id>")
+    def close_specific_trades(strategy_id):
+        return close_all_trades(strategy_id)
+
     @app.route("/api/close_trades")
     def close_trades():
         return close_all_trades()

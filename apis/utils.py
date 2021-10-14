@@ -239,14 +239,17 @@ def get_computed_profit():
     return result
 
 
-def close_all_trades():
+def close_all_trades(strategy_id):
     bank_nifty_constructed_data = get_constructed_data(symbol="BANKNIFTY")
     nifty_constructed_data = get_constructed_data(symbol="NIFTY")
 
     update_mappings = []
     exited_at = datetime.now()
+
     for strategy_id in (
-        NFO.query.with_entities(NFO.strategy_id).distinct(NFO.strategy_id).all()
+        [strategy_id]
+        if strategy_id
+        else (NFO.query.with_entities(NFO.strategy_id).distinct(NFO.strategy_id).all())
     ):
         for nfo in NFO.query.filter_by(strategy_id=strategy_id, exited_at=None).all():
             constructed_data = (
