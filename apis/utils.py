@@ -167,6 +167,7 @@ def get_computed_profit():
     bajaj_finance_constructed_data = get_constructed_data(symbol="BAJFINANCE")
     tata_motors_constructed_data = get_constructed_data(symbol="TATAMOTORS")
     sbi_constructed_data = get_constructed_data(symbol="SBIN")
+    adanient_constructed_data = get_constructed_data(symbol="ADANIENT")
     data = []
 
     total_profits = 0
@@ -190,6 +191,8 @@ def get_computed_profit():
                 constructed_data = bajaj_finance_constructed_data
             elif nfo.symbol == "SBIN":
                 constructed_data = sbi_constructed_data
+            elif nfo.symbol == "ADANIENT":
+                constructed_data = adanient_constructed_data
 
             if nfo.exited_at:
                 completed_profit += nfo.profit

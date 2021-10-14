@@ -1,22 +1,25 @@
 import requests
 
 strategy_id_name_dct = {
-    1: "BankNifty Pyramiding_1",
-    2: "Nifty50 Pyramiding_1",
-    3: "BankNifty Pyramiding_10",
-    4: "Nifty50 Pyramiding_10",
+    1: "BankNifty Pyr_1",
+    2: "Nifty50 Pyr_1",
+    3: "BankNifty Pyr_10",
+    4: "Nifty50 Pyr_10",
 
-    5: "BajFinance Pyramiding_10_vol",
-    15: "BajFinance Pyramiding_10_atm",
+    5: "BajFinance Pyr_10_vol",
+    15: "BajFinance Pyr_10_atm",
 
-    6: "AxisBank Pyramiding_10_vol",
-    16: "AxisBank Pyramiding_10_atm",
+    6: "AxisBank Pyr_10_vol",
+    16: "AxisBank Pyr_10_atm",
 
-    7: "TataMotors Pyramiding_10_vol",
-    17: "TataMotors Pyramiding_10_atm",
+    7: "TataMotors Pyr_10_vol",
+    17: "TataMotors Pyr_10_atm",
 
-    8: "SBI Pyramiding_10_atm",
-    9: "SBI Pyramiding_10_vol"
+    8: "SBI Pyr_10_atm",
+    9: "SBI Pyr_10_vol",
+
+    10: "ADANIENT Pyr_10_vol",
+    11: "ADANIENT Pyr_10_atm"
 }
 
 # TODO do not remove this unless you are confident that above code will work for atleast 15 days
