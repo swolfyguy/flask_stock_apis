@@ -13,8 +13,8 @@ strategy_id_name_dct = {
     17: "TataMotors Pyr_10_atm",
     8: "SBI Pyr_10_atm",
     9: "SBI Pyr_10_vol",
-    10: "ADANIENT Pyr_10_vol",
-    11: "ADANIENT Pyr_10_atm",
+    10: "AdaniEnterprises Pyr_10_vol",
+    11: "AdaniEnterprises Pyr_10_atm",
 }
 
 # TODO do not remove this unless you are confident that above code will work for atleast 15 days
