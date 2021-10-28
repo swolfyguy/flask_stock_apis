@@ -169,8 +169,6 @@ def get_computed_profit(strategy_id=None):
         bank_nifty_constructed_data = get_constructed_data(symbol="BANKNIFTY")
         nifty_constructed_data = get_constructed_data(symbol="NIFTY")
         axis_bank_constructed_data = get_constructed_data(symbol="AXISBANK")
-        bajaj_finance_constructed_data = get_constructed_data(symbol="BAJFINANCE")
-        tata_motors_constructed_data = get_constructed_data(symbol="TATAMOTORS")
         sbi_constructed_data = get_constructed_data(symbol="SBIN")
         adanient_constructed_data = get_constructed_data(symbol="ADANIENT")
 
@@ -195,10 +193,6 @@ def get_computed_profit(strategy_id=None):
                 constructed_data = nifty_constructed_data
             elif nfo.symbol == "AXISBANK":
                 constructed_data = axis_bank_constructed_data
-            elif nfo.symbol == "TATAMOTORS":
-                constructed_data = tata_motors_constructed_data
-            elif nfo.symbol == "BAJFINANCE":
-                constructed_data = bajaj_finance_constructed_data
             elif nfo.symbol == "SBIN":
                 constructed_data = sbi_constructed_data
             elif nfo.symbol == "ADANIENT":
