@@ -197,6 +197,8 @@ def get_computed_profit(strategy_id=None):
                 constructed_data = sbi_constructed_data
             elif nfo.symbol == "ADANIENT":
                 constructed_data = adanient_constructed_data
+            else:
+                continue
 
             if nfo.exited_at:
                 completed_profit += nfo.profit
@@ -246,6 +248,9 @@ def get_computed_profit(strategy_id=None):
 def close_all_trades(strategy_id):
     bank_nifty_constructed_data = get_constructed_data(symbol="BANKNIFTY")
     nifty_constructed_data = get_constructed_data(symbol="NIFTY")
+    axis_bank_constructed_data = get_constructed_data(symbol="AXISBANK")
+    sbi_constructed_data = get_constructed_data(symbol="SBIN")
+    adanient_constructed_data = get_constructed_data(symbol="ADANIENT")
 
     update_mappings = []
     exited_at = datetime.now()
@@ -256,11 +261,20 @@ def close_all_trades(strategy_id):
         else (NFO.query.with_entities(NFO.strategy_id).distinct(NFO.strategy_id).all())
     ):
         for nfo in NFO.query.filter_by(strategy_id=strategy_id, exited_at=None).all():
-            constructed_data = (
-                bank_nifty_constructed_data
-                if nfo.symbol == "BANKNIFTY"
-                else nifty_constructed_data
-            )
+
+            if nfo.symbol == "BANKNIFTY":
+                constructed_data = bank_nifty_constructed_data
+            elif nfo.symbol == "NIFTY":
+                constructed_data = nifty_constructed_data
+            elif nfo.symbol == "AXISBANK":
+                constructed_data = axis_bank_constructed_data
+            elif nfo.symbol == "SBIN":
+                constructed_data = sbi_constructed_data
+            elif nfo.symbol == "ADANIENT":
+                constructed_data = adanient_constructed_data
+            else:
+                continue
+
             profit = get_profit(
                 nfo,
                 float(constructed_data[f"{nfo.strike}_{nfo.option_type}"]),
@@ -280,7 +294,7 @@ def fetch_data(symbol="BANKNIFTY", expiry="03 NOV 2021"):
         expiry = expiry
     else:
         atyp = "OPTSTK"
-        expiry = "28 OCT 2021"
+        expiry = "25 NOV 2021"
 
     return requests.post(
         "https://ewmw.edelweiss.in/api/Market/optionchaindetails",
