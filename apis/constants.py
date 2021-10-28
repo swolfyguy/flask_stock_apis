@@ -11,6 +11,8 @@ strategy_id_name_dct = {
     9: "SBI Pyr_10_vol",
     10: "AdaniEnterprises Pyr_10_vol",
     11: "AdaniEnterprises Pyr_10_atm",
+    12:"BajajAuto pyr_10_atm",
+    13: "BajajAuto pyr_10_vol",
 }
 
 strategy_symbol_dict = {
@@ -24,6 +26,8 @@ strategy_symbol_dict = {
     9: "SBIN",
     10: "ADANIENT",
     11: "ADANIENT",
+    12: "BAJAJ-AUTO",
+    13: "BAJAJ-AUTO"
 }
 
 # TODO do not remove this unless you are confident that above code will work for atleast 15 days
