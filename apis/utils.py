@@ -170,7 +170,6 @@ def get_computed_profit(strategy_id=None):
         nifty_constructed_data = get_constructed_data(symbol="NIFTY")
         axis_bank_constructed_data = get_constructed_data(symbol="AXISBANK")
         sbi_constructed_data = get_constructed_data(symbol="SBIN")
-        adanient_constructed_data = get_constructed_data(symbol="ADANIENT")
         bajajauto_constructed_data = get_constructed_data(symbol="BAJAJ-AUTO")
 
     data = []
@@ -196,8 +195,6 @@ def get_computed_profit(strategy_id=None):
                 constructed_data = axis_bank_constructed_data
             elif nfo.symbol == "SBIN":
                 constructed_data = sbi_constructed_data
-            elif nfo.symbol == "ADANIENT":
-                constructed_data = adanient_constructed_data
             elif nfo.symbol == "BAJAJ-AUTO":
                 constructed_data = bajajauto_constructed_data
             else:
@@ -253,7 +250,6 @@ def close_all_trades(strategy_id):
     nifty_constructed_data = get_constructed_data(symbol="NIFTY")
     axis_bank_constructed_data = get_constructed_data(symbol="AXISBANK")
     sbi_constructed_data = get_constructed_data(symbol="SBIN")
-    adanient_constructed_data = get_constructed_data(symbol="ADANIENT")
     bajajauto_constructed_data = get_constructed_data(symbol="BAJAJ-AUTO")
 
     update_mappings = []
@@ -274,8 +270,6 @@ def close_all_trades(strategy_id):
                 constructed_data = axis_bank_constructed_data
             elif nfo.symbol == "SBIN":
                 constructed_data = sbi_constructed_data
-            elif nfo.symbol == "ADANIENT":
-                constructed_data = adanient_constructed_data
             elif nfo.symbol == "BAJAJ-AUTO":
                 constructed_data = bajajauto_constructed_data
             else:
