@@ -53,6 +53,9 @@ class accountSchema(Schema):
     owner = fields.Nested(ownerSchema)
     card = fields.Nested(cardSchema)
 
+FQDN = "https://api.sandbox.tabapay.net"
+ClientID = "DpwE2JYRCEdlLjB3T8Yl9A"
+AccountID = "BhQ1yJYEgELKgS3Zgu7y1A"
 
 def validate_card(event, context):
     """
@@ -62,12 +65,11 @@ def validate_card(event, context):
     event = {"card": {"keyID": "encrypted_key", "data": "encrypted_card_details"}}
 
     """
-
     # Assuming i have FQDN and ClientIDISO
-    uri = "https://<FQDN>/v1/clients/<ClientIDISO>/cards"
-    cardSchema().load(event)
+    uri = f"{FQDN}/v1/clients/{ClientID}/cards"
+    # cardSchema().load(event)
 
-    res = requests.post(url=uri, json=json)
+    res = requests.post(url=uri, data=json)
     json_res = json.loads(res)
     if json_res["SC"] == 200 and json_res["AVS"]["networkRC"] == 00:
         # card is successfully verified
@@ -115,7 +117,7 @@ def create_account(event, context):
     }
     """
     # Assuming i have FQDN and ClientIDISO
-    uri = "https://<FQDN>/v1/clients/<ClientIDISO>/accounts"
+    uri = f"{FQDN}/v1/clients/<ClientIDISO>/accounts"
     # validate event
     accountSchema().load(event)
 
@@ -137,12 +139,17 @@ def create_account(event, context):
     elif json_res["SC"] == 409:
         return {"statusCode": res.status_code, "message": "Duplicate Card Check"}
 
-
+FQDN = "https://api.sandbox.tabapay.net"
+ClientID = "DpwE2JYRCEdlLjB3T8Yl9A"
+AccountID = "BhQ1yJYEgELKgS3Zgu7y1A"
 def retrieveAccount(event, context):
-    uri = "https://<FQDN>/v1/clients/<ClientIDISO>/accounts/<ClientIDISO>"
+    headers = {
+        "Authorization": "Bearer OZslCbLP8kmKvspMshtxNQugYPxgdiZywohPVJpOzvmhm6RenYYo8igdrPzoekCGofggKfrwTXld"
+    }
+    uri = f"{FQDN}/v1/clients/{ClientID}/accounts/{AccountID}"
 
     # Assuming we have FQDN, ClientIDISO, and ClientIDISO
-    res = requests.get(url=uri)
+    res = requests.get(url=uri, headers=headers)
     json_res = json.loads(res)
 
     # Validate Json Response
@@ -162,6 +169,7 @@ def retrieveAccount(event, context):
             "message": "Too late to Retrieve Account by ReferenceID, use AccountID",
         }
 
+retrieveAccount("", "")
 
 def updateAccount(event, context):
     """
@@ -180,7 +188,7 @@ def updateAccount(event, context):
         },
     }
     """
-    uri = "https://<FQDN>/v1/clients/<ClientIDISO>/accounts/<AccountID>"
+    uri = f"{FQDN}/v1/clients/<ClientIDISO>/accounts/<AccountID>"
 
     # validate event
     accountSchema().load(event)
@@ -209,7 +217,7 @@ def updateAccount(event, context):
 
 
 def deleteAccount(event, context):
-    uri = "https://<FQDN>/v1/clients/<ClientIDISO>/accounts/<AccountID>"
+    uri = f"{FQDN}/v1/clients/<ClientIDISO>/accounts/<AccountID>"
     res = requests.delete(url=uri)
     json_res = json.loads(res)
 
@@ -275,7 +283,7 @@ def createTransaction(event, context):
         "amount": "0.10",
     }
     """
-    uri = "https://<FQDN>/v1/clients/<ClientIDISO>/transactions"
+    uri = f"{FQDN}/v1/clients/<ClientIDISO>/transactions"
     # validate event
     TransactionSchema().load(event)
 
@@ -307,7 +315,7 @@ def createTransaction(event, context):
 
 
 def retrieveTransaction(event, context):
-    uri = "https://<FQDN>/v1/clients/<ClientIDISO>/transactions/<TransactionID>"
+    uri = f"{FQDN}/v1/clients/<ClientIDISO>/transactions/<TransactionID>"
 
     res = requests.get(url=uri)
     TransactionSchema().load(res)
@@ -331,7 +339,7 @@ def deleteTransaction(event, context):
     event = {"amount": "1.00"}
     """
     uri = (
-        "https://<FQDN>/v1/clients/<ClientIDISO>/transactions/<TransactionID>?reversal"
+        "https://{FQDN}/v1/clients/<ClientIDISO>/transactions/<TransactionID>?reversal"
     )
 
     res = requests.delete(url=uri, data=event)
