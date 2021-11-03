@@ -53,9 +53,11 @@ class accountSchema(Schema):
     owner = fields.Nested(ownerSchema)
     card = fields.Nested(cardSchema)
 
+
 FQDN = "https://api.sandbox.tabapay.net"
 ClientID = "DpwE2JYRCEdlLjB3T8Yl9A"
 AccountID = "BhQ1yJYEgELKgS3Zgu7y1A"
+
 
 def validate_card(event, context):
     """
@@ -139,9 +141,12 @@ def create_account(event, context):
     elif json_res["SC"] == 409:
         return {"statusCode": res.status_code, "message": "Duplicate Card Check"}
 
-FQDN = "https://api.sandbox.tabapay.net"
+
+FQDN = "https://api.sandbox.tabapay.net:10443"
 ClientID = "DpwE2JYRCEdlLjB3T8Yl9A"
 AccountID = "BhQ1yJYEgELKgS3Zgu7y1A"
+
+
 def retrieveAccount(event, context):
     headers = {
         "Authorization": "Bearer OZslCbLP8kmKvspMshtxNQugYPxgdiZywohPVJpOzvmhm6RenYYo8igdrPzoekCGofggKfrwTXld"
@@ -169,7 +174,9 @@ def retrieveAccount(event, context):
             "message": "Too late to Retrieve Account by ReferenceID, use AccountID",
         }
 
+
 retrieveAccount("", "")
+
 
 def updateAccount(event, context):
     """

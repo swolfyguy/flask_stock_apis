@@ -36,7 +36,7 @@ def common_errors(res):
         return {
             "statusCode": res.status_code,
             "error": "Program not found",
-            "message": res.json(),
+            "message": res.reason,
         }
     elif res.status_code == 405:
         return {
@@ -89,7 +89,6 @@ def get_access_token(event, context):
             "statusCode": res.status_code,
             "body": res.json(),
         }
-    print(res.json())
     return common_errors(res)
 
 
@@ -215,7 +214,7 @@ class FulfillmentSchema(Schema):
 def retrieve_programs(event, context):
     url = f"{blueprint_app_api}/programs/programs"
     headers = {
-        "Authorization": "Bearer rNVajBf_4UAwF0eOxECdZED1jcgkkzKSSxKDmGOT90QQQEVq5lDOR4jTtjPKEUPfs2kEhtBMA4MbW7E77JPk4VQ5N7wQXxoaxGnBGlJY0x5zzqQhCXjldfvK_c-NJhc6bMKbRIWAFUAOHAIKQ6ZzMw9OQMQxEb0k92F3cWXKKA3HbeQHjSQFTGsHSOyGx18-OUGYOqTEWn3Tnn_1H9V3AZZn9cXzT3MN0qMKMzpkm5pTCWIEdvXnGRulciEuYRjCPpKELTuvTKxqb2fP9_T5344HDmnkatQ-ddcH_lQeer2uBZpRDxYWsKtTipmfvQcod_mrmvx6Lu2PeeJhDYiLI_IxBJl6mXGVdIMdNH0DDNIHfhm2A4Rc2-tJxstQGFgUpPbdZjzTskAyoRzM0ChtwrtC6k7DIYIKwcmS3mB5a7e4xjmA-RFMwiH5-PVucI9XZuFgF05ZwCiuCVjhqxX7TrB0KOUgHeVoeDINmRmVhBQTdsLOSiNRtLCjgzbi_Lr2"
+        "Authorization": "Bearer LSbfKxFTuF75r1vMpkO9UTIiX4Q3TkdAGPoKEE8kumPVPPZSK8ob3ipX8Ix14IJucaHwe0FC-Widy5YuKR7ukjdET4VRoblkQhNitIsHo19neZK-rM-K1CAV_h_NK5lwiuf-YPSLt9Zz9423ZpeCBIZ9VOKfsmKxDtG30kpSUHtzF2wu1-30G00uFPd7PDyM36e_1h0l9MZpel1yrTIMgcRLhHrcP2MiinTIQBhz6yCAXdoiSCOJi3LuJWzAwExS0naTo7Egy6qfR89OF3Cc2tp1bWcgIZpVpAOdN84mo_UiPT6RoLo0evKhvj1-fyaZW-h4fBRrnjJscsffXBxm-DGdGA5Cg6BQapH6L_KRmnKUmGWoTklIM2fAa1hehqd06fGDNFM0U5de8g2ikciKCrTvlmVibIYAuFKXXDFfn7-UOikd216hi1ILz3VPJMPbIj4rt-KW-wi83E3ObMgQPw84S1ZvwLZMBhaU2UjAnGdizzuIzCCIn1_4wfT4uIud"
     }
     res = requests.get(url=url, headers=headers)
 
@@ -232,7 +231,6 @@ def retrieve_programs(event, context):
             "body": res.json(),
         }
     return common_errors(res)
-
 
 def get_programs_catalogue(event, context):
     programId = "6416"
@@ -354,7 +352,7 @@ def submit_immediate_order(event, context):
         "PurchaseOrderNumber": "test007",
         "CatalogId": 1,
         "Metadata": "test",
-        "CustomerOrderId": "testing003",
+        "CustomerOrderId": "testing002",
         "Recipients": [
             {
                 "ShippingMethod": "Email",
