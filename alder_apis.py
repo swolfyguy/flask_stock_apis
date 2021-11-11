@@ -1,12 +1,7 @@
-import json
-
 import csv
 import requests
-import os
-from requests.models import Response
 
 from marshmallow import Schema, fields
-from marshmallow import validate
 
 
 blueprint_app_api = "https://app.giftango.com"
@@ -232,6 +227,7 @@ def retrieve_programs(event, context):
         }
     return common_errors(res)
 
+
 def get_programs_catalogue(event, context):
     programId = "6416"
     url = f"{blueprint_app_api}/programs/programs/{programId}/catalogs"
@@ -260,7 +256,7 @@ def get_catalogue(event, context):
     catalogId = "1"
     url = f"{blueprint_app_api}/programs/programs/{programId}/catalogs/{catalogId}"
     headers = {
-        "Authorization": "Bearer rNVajBf_4UAwF0eOxECdZED1jcgkkzKSSxKDmGOT90QQQEVq5lDOR4jTtjPKEUPfs2kEhtBMA4MbW7E77JPk4VQ5N7wQXxoaxGnBGlJY0x5zzqQhCXjldfvK_c-NJhc6bMKbRIWAFUAOHAIKQ6ZzMw9OQMQxEb0k92F3cWXKKA3HbeQHjSQFTGsHSOyGx18-OUGYOqTEWn3Tnn_1H9V3AZZn9cXzT3MN0qMKMzpkm5pTCWIEdvXnGRulciEuYRjCPpKELTuvTKxqb2fP9_T5344HDmnkatQ-ddcH_lQeer2uBZpRDxYWsKtTipmfvQcod_mrmvx6Lu2PeeJhDYiLI_IxBJl6mXGVdIMdNH0DDNIHfhm2A4Rc2-tJxstQGFgUpPbdZjzTskAyoRzM0ChtwrtC6k7DIYIKwcmS3mB5a7e4xjmA-RFMwiH5-PVucI9XZuFgF05ZwCiuCVjhqxX7TrB0KOUgHeVoeDINmRmVhBQTdsLOSiNRtLCjgzbi_Lr2"
+        "Authorization": "Bearer XX4zeK4cPaimY4PSqNlg8TsOS2LSEjtC-W1jjl9X9OTUpvEcpPw13YdpozzJlvK8ieHyHazO43OnL0zRMlmnk4xhd6RfoRyYhKHeoO358Aexkqpvu_gOiclBLXKnKsSJBDu8orErfoEx5Imkot_Qg-M2d6iv1wgwjhj5sWSO0pPbTj4dAlDhpmDZdqOhu2ZriQyY7Y0P_jR-ZM46cDZXtBIZznQg_XrimGTSzq3tT2MIqtNwxmg-sv8ZPGgq-gxiU23KxWSI2mgOqxTeIAlZs4v6vU12JV0_AjxHuTDOjn2KxKE9TeJZcCLr_KXwB3fOKaEU3Yrjg5TeQ-QYuOv7R6B3ZFdB5sR4iEdvVoRqPChXlc1Yi5xZuO6C5EzOtj1YQGJAeLQ-QnMBgkYUZXtgWbvy8CBIPaOQbE4vOyvIqR3QoVLBUM2v0UMOTptP2dBcqmKwTdasS1wChun5EsCWKOdJ--2o4yl5TJfId_t2sJCprCB1ht-pNLgb7jxBsQbS"
     }
     res = requests.get(url=url, headers=headers)
 
@@ -278,7 +274,6 @@ def get_catalogue(event, context):
         }
     return common_errors(res)
 
-
 def get_catalogue_assets(event, context):
     programId = 6416
     catalogId = "1"
@@ -286,7 +281,7 @@ def get_catalogue_assets(event, context):
         f"{blueprint_app_api}/programs/programs/{programId}/catalogs/{catalogId}/assets"
     )
     headers = {
-        "Authorization": "Bearer rNVajBf_4UAwF0eOxECdZED1jcgkkzKSSxKDmGOT90QQQEVq5lDOR4jTtjPKEUPfs2kEhtBMA4MbW7E77JPk4VQ5N7wQXxoaxGnBGlJY0x5zzqQhCXjldfvK_c-NJhc6bMKbRIWAFUAOHAIKQ6ZzMw9OQMQxEb0k92F3cWXKKA3HbeQHjSQFTGsHSOyGx18-OUGYOqTEWn3Tnn_1H9V3AZZn9cXzT3MN0qMKMzpkm5pTCWIEdvXnGRulciEuYRjCPpKELTuvTKxqb2fP9_T5344HDmnkatQ-ddcH_lQeer2uBZpRDxYWsKtTipmfvQcod_mrmvx6Lu2PeeJhDYiLI_IxBJl6mXGVdIMdNH0DDNIHfhm2A4Rc2-tJxstQGFgUpPbdZjzTskAyoRzM0ChtwrtC6k7DIYIKwcmS3mB5a7e4xjmA-RFMwiH5-PVucI9XZuFgF05ZwCiuCVjhqxX7TrB0KOUgHeVoeDINmRmVhBQTdsLOSiNRtLCjgzbi_Lr2"
+        "Authorization": "Bearer XX4zeK4cPaimY4PSqNlg8TsOS2LSEjtC-W1jjl9X9OTUpvEcpPw13YdpozzJlvK8ieHyHazO43OnL0zRMlmnk4xhd6RfoRyYhKHeoO358Aexkqpvu_gOiclBLXKnKsSJBDu8orErfoEx5Imkot_Qg-M2d6iv1wgwjhj5sWSO0pPbTj4dAlDhpmDZdqOhu2ZriQyY7Y0P_jR-ZM46cDZXtBIZznQg_XrimGTSzq3tT2MIqtNwxmg-sv8ZPGgq-gxiU23KxWSI2mgOqxTeIAlZs4v6vU12JV0_AjxHuTDOjn2KxKE9TeJZcCLr_KXwB3fOKaEU3Yrjg5TeQ-QYuOv7R6B3ZFdB5sR4iEdvVoRqPChXlc1Yi5xZuO6C5EzOtj1YQGJAeLQ-QnMBgkYUZXtgWbvy8CBIPaOQbE4vOyvIqR3QoVLBUM2v0UMOTptP2dBcqmKwTdasS1wChun5EsCWKOdJ--2o4yl5TJfId_t2sJCprCB1ht-pNLgb7jxBsQbS"
     }
     res = requests.get(url=url, headers=headers)
 
@@ -330,7 +325,7 @@ def submit_immediate_order(event, context):
               "StateProvinceCode": "string",
               "PostalCode": "string",
               "CountryCode": "string",
-              "DeliverEmail": true,
+              "DeliverEmail": True,
               "Products": [
                 {
                   "Sku": "string",
@@ -376,8 +371,8 @@ def submit_immediate_order(event, context):
         return errors
 
     headers = {
-        "Authorization": "Bearer LTkP1gPLCwl5fQ5hWz89rOlPYlmutPu6NDxY1MHou3R38zKAjL1jbiTMtcdCSsHy2HcQAJaofBV_MnhJzVzzz83Whd-5uVKdmJDJ8rwncUXpuOFo09C7PJCPRa5W3xwTkDRezv1zU3ou7FIekmOatr7BGkQc7ZenjUt_O5Pus6t5xbyDzL8zm0aiIGv4F9givLyL06IIp_00K5nyZHXXr0yeTmPfl_mZDreXCg7AlD-h3qi49cgG0RuBuAaLxFt9VROaZXB-stiBISQLaR9TUQQ3hswF6_7hmzMuhfYlSQ2WUWUZGPzWxbloAbUJRY_oETPE242_t50jqqgl3oNzFIipLvJYcPngA-DWMKk1buYuNuVq7loqrqbbHFJPk-M_IPS1S6VYQvSCKyWpmv8NtN3WGATCGSQbvMqnudk1vkdpMU28X5C5vEZKhpBeGig4r-vadHnQVHD9dMP53fLnDLu3P6E8_R2ekujPofAKbr6AHEw2rgdffn8siXPwoMo-",
-        "ProgramId": "6416",
+        "Authorization": "Bearer XX4zeK4cPaimY4PSqNlg8TsOS2LSEjtC-W1jjl9X9OTUpvEcpPw13YdpozzJlvK8ieHyHazO43OnL0zRMlmnk4xhd6RfoRyYhKHeoO358Aexkqpvu_gOiclBLXKnKsSJBDu8orErfoEx5Imkot_Qg-M2d6iv1wgwjhj5sWSO0pPbTj4dAlDhpmDZdqOhu2ZriQyY7Y0P_jR-ZM46cDZXtBIZznQg_XrimGTSzq3tT2MIqtNwxmg-sv8ZPGgq-gxiU23KxWSI2mgOqxTeIAlZs4v6vU12JV0_AjxHuTDOjn2KxKE9TeJZcCLr_KXwB3fOKaEU3Yrjg5TeQ-QYuOv7R6B3ZFdB5sR4iEdvVoRqPChXlc1Yi5xZuO6C5EzOtj1YQGJAeLQ-QnMBgkYUZXtgWbvy8CBIPaOQbE4vOyvIqR3QoVLBUM2v0UMOTptP2dBcqmKwTdasS1wChun5EsCWKOdJ--2o4yl5TJfId_t2sJCprCB1ht-pNLgb7jxBsQbS"
+                         ,"ProgramId": "6416",
     }
 
     url = f"{blueprint_api}/Orders/Immediate"
@@ -396,6 +391,7 @@ def submit_immediate_order(event, context):
         }
     return common_errors(res)
 
+submit_immediate_order("","")
 
 def get_order(event, context):
     orderUri = "orderUri"
@@ -573,3 +569,196 @@ def generate_csv():
             )
             fc.writeheader()
             fc.writerows(csv_row)
+
+
+response_ = {
+  "name": "StoreCash TEST USD",
+  "id": 1,
+  "programId": 6416,
+  "products": [
+    {
+      "productName": "Venue 1 - Golf",
+      "brandName": "Venue USD",
+      "productSku": "VUSD-D-V-00",
+      "isDigital": True,
+      "maxAmount": 2000,
+      "minAmount": 0.01,
+      "description": "",
+      "modifiedOn": "2019-11-18T10:30:57.7770279",
+      "currencyCode": "USD",
+      "productType": "GiftCard",
+      "categories": []
+    },
+    {
+      "productName": "Venue 2 - Spa",
+      "brandName": "Venue USD",
+      "productSku": "VUSA-D-2500-00",
+      "isDigital": True,
+      "maxAmount": 25,
+      "minAmount": 25,
+      "description": "",
+      "modifiedOn": "2019-11-18T10:16:54.6078712",
+      "currencyCode": "USD",
+      "productType": "GiftCard",
+      "categories": []
+    },
+    {
+      "productName": "Venue 2 - Spa",
+      "brandName": "Venue USD",
+      "productSku": "VUSA-D-5000-00",
+      "isDigital": True,
+      "maxAmount": 50,
+      "minAmount": 50,
+      "description": "",
+      "modifiedOn": "2019-11-18T10:17:06.3467736",
+      "currencyCode": "USD",
+      "productType": "GiftCard",
+      "categories": []
+    },
+    {
+      "productName": "Venue 3 - Boutique",
+      "brandName": "Venue USD",
+      "productSku": "VUSD-D-10000-00",
+      "isDigital": True,
+      "maxAmount": 100,
+      "minAmount": 100,
+      "description": "",
+      "modifiedOn": "2019-11-18T10:17:34.5039384",
+      "currencyCode": "USD",
+      "productType": "GiftCard",
+      "categories": []
+    },
+    {
+      "productName": "Venue 4 - Resorts One Mimosa Brunch Buffet",
+      "brandName": "Venue USD",
+      "productSku": "VUSA-D-V-00",
+      "isDigital": True,
+      "maxAmount": 34.99,
+      "minAmount": 34.99,
+      "description": "One Mimosa Brunch Buffet",
+      "modifiedOn": "2019-11-18T10:17:55.8115717",
+      "currencyCode": "USD",
+      "productType": "Voucher",
+      "categories": []
+    },
+    {
+      "productName": "Venue 4 - Resorts One Suite Night Stay",
+      "brandName": "Venue USD",
+      "productSku": "VUSA-D-V-01",
+      "isDigital": True,
+      "maxAmount": 234.56,
+      "minAmount": 234.56,
+      "description": "One Suite Night Stay",
+      "modifiedOn": "2019-11-18T10:18:16.6491769",
+      "currencyCode": "USD",
+      "productType": "Voucher",
+      "categories": []
+    },
+    {
+      "productName": "Venue 5 - Fine Dining",
+      "brandName": "Venue USD",
+      "productSku": "VUSD-D-V-01",
+      "isDigital": True,
+      "maxAmount": 1000,
+      "minAmount": 5,
+      "description": "",
+      "modifiedOn": "2020-05-26T15:06:18.0254329",
+      "currencyCode": "USD",
+      "productType": "PrepaidGiftCard",
+      "categories": []
+    },
+    {
+      "productName": "Venue 1 - Golf",
+      "brandName": "Venue USD",
+      "productSku": "VUSD-P-V-00",
+      "isDigital": False,
+      "maxAmount": 2000,
+      "minAmount": 0.01,
+      "description": "",
+      "modifiedOn": "2020-06-15T15:50:10.8557187",
+      "currencyCode": "USD",
+      "productType": "GiftCard",
+      "categories": []
+    },
+    {
+      "productName": "Venue 2 - Spa",
+      "brandName": "Venue USD",
+      "productSku": "VUSA-P-2500-00",
+      "isDigital": False,
+      "maxAmount": 25,
+      "minAmount": 25,
+      "description": "",
+      "modifiedOn": "2019-11-18T10:17:18.2696908",
+      "currencyCode": "USD",
+      "productType": "GiftCard",
+      "categories": []
+    },
+    {
+      "productName": "Venue 3 - Boutique",
+      "brandName": "Venue USD",
+      "productSku": "VUSD-P-10000-00",
+      "isDigital": False,
+      "maxAmount": 100,
+      "minAmount": 100,
+      "description": "",
+      "modifiedOn": "2019-11-18T10:17:44.1436828",
+      "currencyCode": "USD",
+      "productType": "GiftCard",
+      "categories": []
+    },
+    {
+      "productName": "Venue 4 - Resorts One Mimosa Brunch Buffet",
+      "brandName": "Venue USD",
+      "productSku": "VUSA-P-V-00",
+      "isDigital": False,
+      "maxAmount": 34.99,
+      "minAmount": 34.99,
+      "description": "One Mimosa Brunch Buffet",
+      "modifiedOn": "2019-11-18T10:18:07.3944766",
+      "currencyCode": "USD",
+      "productType": "Voucher",
+      "categories": []
+    },
+    {
+      "productName": "Venue 5 - Prepaid",
+      "brandName": "Venue USD",
+      "productSku": "VUSD-P-V-01",
+      "isDigital": False,
+      "maxAmount": 2000,
+      "minAmount": 10,
+      "description": "",
+      "modifiedOn": "2020-06-15T15:57:47.9598741",
+      "currencyCode": "USD",
+      "productType": "PrepaidGiftCard",
+      "categories": []
+    },
+    {
+      "productName": "Venue 4 - Resorts One Suite Night Stay",
+      "brandName": "Venue USD",
+      "productSku": "VUSA-P-V-01",
+      "isDigital": False,
+      "maxAmount": 234.56,
+      "minAmount": 234.56,
+      "description": "One Suite Night Stay",
+      "modifiedOn": "2019-11-18T10:18:25.3608446",
+      "currencyCode": "USD",
+      "productType": "Voucher",
+      "categories": []
+    },
+    {
+      "productName": "Venue 2 - Spa",
+      "brandName": "Venue USD",
+      "productSku": "VUSA-P-7500-00",
+      "isDigital": False,
+      "maxAmount": 75,
+      "minAmount": 75,
+      "description": "",
+      "modifiedOn": "2019-11-18T10:17:26.619329",
+      "currencyCode": "USD",
+      "productType": "GiftCard",
+      "categories": []
+    }
+  ]
+}
+
+# ProgramWithProductsSchema().load(response_)
