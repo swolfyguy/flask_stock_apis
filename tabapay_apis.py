@@ -1,4 +1,5 @@
 import json
+import random
 
 import requests
 
@@ -37,9 +38,9 @@ class ownerSchema(Schema):
 
 
 class cardSchema(Schema):
-    accountNumber = fields.Integer()
-    expirationDate = fields.Integer()
-    securityCode = fields.Integer()
+    accountNumber = fields.Integer(required=True)
+    expirationDate = fields.Integer(required=True)
+    securityCode = fields.Integer(required=True)
 
 
 class bankSchema(Schema):
@@ -104,10 +105,14 @@ def validate_card(event, context):
         "Content-type": "application/json",
     }
     uri = f"{FQDN}/v1/clients/{ClientID}/cards"
-    data, errors = cardSchema().load(event["card"])
 
-    if errors:
-        return errors
+    try:
+        cardSchema().load(event["card"])
+    except Exception as e:
+        return {
+            "error": "validation error",
+            "message": e,
+        }
 
     res = requests.post(url=uri, json=event, headers=headers)
 
@@ -115,14 +120,20 @@ def validate_card(event, context):
         json_res = json.loads(res.text)
         if json_res["SC"] == 200 and json_res["EC"] == "0":
             # card is successfully verified
-            # check if card is available for pull
-            if json_res["card"]["pull"]["enabled"]:
+            # check if card is available for pull and push
+            if (
+                json_res["card"]["pull"]["enabled"]
+                and json_res["card"]["push"]["enabled"]
+            ):
                 return {
                     "statusCode": res.status_code,
                     "body": json_res["card"]["pull"],
                 }
-            else:
+            elif not json_res["card"]["pull"]["enabled"]:
                 return {"statuscode": 403, "body": "Pull is disabled for the Card"}
+
+            elif not json_res["card"]["push"]["enabled"]:
+                return {"statuscode": 403, "body": "Push is disabled for the Card"}
     return {
         "statuscode": res.status_code,
         "body": res.text,
@@ -142,10 +153,14 @@ def retrieveAccount(event, context):
         json_res = json.loads(res.text)
 
         # Validate Json Response
-        data, errors = accountSchema().load(json_res)
-
-        if errors:
-            return errors
+        try:
+            data = accountSchema().load(json_res)
+        except Exception as e:
+            return {
+                "error": "validation error",
+                "statusCode": res.status_code,
+                "message": e,
+            }
 
         if json_res["SC"] == 200 and json_res["EC"] == "0":
             # account is successfully created
@@ -186,9 +201,13 @@ def create_account(event, context):
         "Content-type": "application/json",
     }
     # validate event
-    data, errors = accountSchema().load(event)
-    if errors:
-        return errors
+    try:
+         accountSchema().load(event)
+    except Exception as e:
+        return {
+            "error": "validation error",
+            "message": e,
+        }
 
     res = requests.post(url=uri, json=event, headers=headers)
     if res.status_code == 200:
@@ -197,7 +216,7 @@ def create_account(event, context):
             # account is successfully created
             return {
                 "statusCode": res.status_code,
-                "accountId": json_res["accountID"],
+                "data": json_res,
                 "message": "account is successfully created",
             }
     elif res.status_code == 207:
@@ -246,7 +265,13 @@ def updateAccount(event, context):
     uri = f"{FQDN}/v1/clients/{ClientID}/accounts/{AccountID}"
 
     # validate event
-    data, errors = accountSchema().load(event)
+    try:
+        accountSchema().load(event)
+    except Exception as e:
+        return {
+            "error": "validation error",
+            "body": e,
+        }
 
     res = requests.put(url=uri, json=event, headers=headers)
     if res.status_code == 200:
@@ -320,91 +345,22 @@ class TransactionSchema(Schema):
 
 def createTransaction(event, context):
     """
+    Flow:
+        validate card
+        create Account
+        Fetch Card details from Account
+        call Pull Transactions
+        call Push Transactions
+
      event = {
-        "referenceID": "1",
-        "type": "pull",
-        "accounts": {
-            "sourceAccount": {
-                "card": {
-                    "accountNumber": "9999999999999999",
-                    "expirationDate": "202012",
-                },
-                "owner": {
-                    "name": {"first": "John", "last": "Benson"},
-                    "address": {
-                        "line1": "465 Fairchild Drive",
-                        "line2": "Suite #222",
-                        "city": "Mountain View",
-                        "state": "CA",
-                        "zipcode": "94043",
-                    },
-                    "phone": {"number": "4159808222"},
-                },
+            "referenceID": "".join([str(random.randint(0, 9)) for _ in range(7)]),
+            "card": {
+                "accountNumber": 4005519200000004,
+                "expirationDate": 202012,
+                "securityCode": 344,
             },
-            "destinationAccountID": "TabaPay_AccountID_22-c",
-        },
-        "amount": "0.10",
-    }
-    """
-    headers = {
-        "Authorization": "Bearer OZslCbLP8kmKvspMshtxNQugYPxgdiZywohPVJpOzvmhm6RenYYo8igdrPzoekCGofggKfrwTXld",
-        "Content-type": "application/json",
-    }
-
-    uri = f"{FQDN}/v1/clients/{ClientID}/transactions"
-    # validate event
-    data, errors = TransactionSchema().load(event)
-
-    if errors:
-        return errors
-
-    res = requests.post(url=uri, json=event, headers=headers)
-    json_res = json.loads(res.text)
-    if json_res["SC"] == 200 and json_res["EC"] == 00:
-        return {
-            "statusCode": res.status_code,
-            "transactionID": json_res["transactionID"],
-            "message": "A Transaction is created and processing is completed",
-        }
-    elif json_res["SC"] == 201:
-        return {
-            "statusCode": res.status_code,
-            "transactionID": json_res["transactionID"],
-            "message": "A Transaction is created, but the transaction is waiting to be processed (batch)",
-        }
-
-    elif json_res["SC"] == 207:
-        return {
-            "statusCode": res.status_code,
-            "message": "One or more Failures occurred while processing the Request",
-        }
-    elif json_res["SC"] == 429:
-        return {
-            "statusCode": res.status_code,
-            "message": "Over your Daily (24-hour rolling) Approximation Limit",
-        }
-    return {"status": res.status_code, "error": res.text}
-
-
-event = {
-    "referenceID": "1",
-    "type": "pull",
-    "accounts": {
-        "sourceAccountID": AccountID,
-        "destinationAccountID": "Cqk27SoFUabims1wT07Lnw",
-    },
-    "amount": "0.10",
-}
-
-
-event = {
-    "referenceID": "1",
-    "type": "pull",
-    "accounts": {
-        "sourceAccount": {
-            "card": {"accountNumber": 4217651111111119, "expirationDate": "202012"},
             "owner": {
-                "name": {"first": "John", "last": "Benson"},
+                "name": {"first": "John", "last": "Customer"},
                 "address": {
                     "line1": "465 Fairchild Drive",
                     "line2": "Suite #222",
@@ -412,56 +368,328 @@ event = {
                     "state": "CA",
                     "zipcode": "94043",
                 },
-                "phone": {"number": "4159808222"},
+                "phone": {"number": 4159808222},
             },
+        }
+    """
+
+    headers = {
+        "Authorization": "Bearer OZslCbLP8kmKvspMshtxNQugYPxgdiZywohPVJpOzvmhm6RenYYo8igdrPzoekCGofggKfrwTXld",
+        "Content-type": "application/json",
+    }
+
+    validate_card_response = validate_card(event, "")
+
+    if validate_card_response.get("statusCode") != 200:
+        return validate_card_response
+
+    create_account_response = create_account(event, "")
+    if create_account_response.get("statusCode") != 200:
+        return create_account_response
+
+    pull_transaction_payload = {
+        "referenceID": "".join([str(random.randint(0, 9)) for _ in range(7)]),
+        "type": "pull",
+        "accounts": {
+            "sourceAccount": {
+                "card": event["card"],
+                "owner": event["owner"],
+            },
+            "destinationAccountID": "BhQ1yJYEgELKgS3Zgu7y1A",
         },
-        "destinationAccountID": "Cqk27SoFUabims1wT07Lnw",
+        "amount": "0.10",
+    }
+
+    transactions_url = f"{FQDN}/v1/clients/{ClientID}/transactions"
+    pull_transaction_response = requests.post(
+        url=transactions_url, json=pull_transaction_payload, headers=headers
+    )
+
+    pull_transaction_json_response = json.loads(pull_transaction_response.text)
+    if (
+        pull_transaction_json_response["SC"] == 200
+        and pull_transaction_json_response["EC"] == "0"
+    ):
+        push_transaction_payload = {
+            "referenceID": "".join([str(random.randint(0, 9)) for _ in range(7)]),
+            "correspondingID": pull_transaction_json_response["transactionID"],
+            "type": "push",
+            "accounts": {
+                "sourceAccountID": "BhQ1yJYEgELKgS3Zgu7y1A",
+                "destinationAccount": {
+                    "card": event["card"],
+                    "owner": event["owner"],
+                },
+            },
+            "amount": "0.10",
+        }
+        push_transaction_response = requests.post(
+            url=transactions_url, json=push_transaction_payload, headers=headers
+        )
+        push_transaction_json_response = json.loads(push_transaction_response.text)
+        if (
+            push_transaction_json_response["SC"] == 200
+            and push_transaction_json_response["EC"] == "0"
+        ):
+            return {
+                "statusCode": push_transaction_response.status_code,
+                "data": push_transaction_json_response,
+                "message": "A Transaction is created and processing is completed",
+            }
+        return {
+            "status": push_transaction_response.status_code,
+            "error": push_transaction_json_response,
+        }
+
+    return {
+        "status": pull_transaction_response.status_code,
+        "error": pull_transaction_json_response,
+    }
+
+
+account_payload = {
+    "referenceID": "".join([str(random.randint(0, 9)) for _ in range(7)]),
+    "card": {
+        "accountNumber": 4005519200000004,
+        "expirationDate": 202012,
+        "securityCode": 344,
     },
-    "amount": "0.10",
+    "owner": {
+        "name": {"first": "John", "last": "Customer"},
+        "address": {
+            "line1": "465 Fairchild Drive",
+            "line2": "Suite #222",
+            "city": "Mountain View",
+            "state": "CA",
+            "zipcode": "94043",
+        },
+        "phone": {"number": 4159808222},
+    },
 }
+print(createTransaction(event=account_payload, context=""))
+
+# output
+# {
+#     "statusCode": 200,
+#     "data": {
+#         "SC": 200,
+#         "EC": "0",
+#         "transactionID": "xnUH5HoFKSFLd2APPPwZBA",
+#         "network": "Visa",
+#         "networkRC": "00",
+#         "networkID": "500132008263490",
+#         "status": "COMPLETED",
+#         "approvalCode": "263490",
+#         "fees": {"interchange": "0.10", "network": "0.00", "tabapay": "0.25"},
+#     },
+#     "message": "A Transaction is created and processing is completed",
+# }
 
 
-createTransaction(event=event, context="")
 
-#
-# def retrieveTransaction(event, context):
-#     uri = f"{FQDN}/v1/clients/<ClientIDISO>/transactions/<TransactionID>"
-#
-#     res = requests.get(url=uri)
-#     TransactionSchema().load(res)
-#
-#     json_res = json.loads(res)
-#     if json_res["SC"] == 200 and json_res["EC"] == 00:
-#         return {
-#             "statusCode": res.status_code,
-#             "transactionID": json_res["transactionID"],
-#             "message": "The Transaction is retrieved",
-#         }
-#     elif json_res["SC"] == 421:
-#         return {
-#             "statusCode": res.status_code,
-#             "message": "Too late to Retrieve Transaction by ReferenceID, use TransactionID",
-#         }
-#
-#
-# def deleteTransaction(event, context):
-#     """
-#     event = {"amount": "1.00"}
-#     """
-#     uri = (
-#         "https://{FQDN}/v1/clients/<ClientIDISO>/transactions/<TransactionID>?reversal"
-#     )
-#
-#     res = requests.delete(url=uri, data=event)
-#
-#     json_res = json.loads(res)
-#     if json_res["SC"] == 200 and json_res["EC"] == 00:
-#         return {
-#             "statusCode": res.status_code,
-#             "message": "A Request for a Reversal of the previous Transaction is successful",
-#         }
-#     elif json_res["SC"] == 207:
-#         return {
-#             "statusCode": res.status_code,
-#             "message": "One or more Failures occurred while processing the Request",
-#         }
+blueprint_app_api = "https://app.giftango.com"
+blueprint_api = "https://api.giftango.com"
+
+
+def common_errors(res):
+    if res.status_code == 400:
+        return {
+            "statusCode": res.status_code,
+            "error": "Bad Request",
+            "message": res.json(),
+        }
+    elif res.status_code == 401:
+        return {
+            "statusCode": res.status_code,
+            "error": "Unauthorized access: check your token",
+            "message": res.json(),
+        }
+    elif res.status_code == 403:
+        return {
+            "statusCode": res.status_code,
+            "error": "Forbidden",
+            "message": res.json(),
+        }
+    elif res.status_code == 404:
+        return {
+            "statusCode": res.status_code,
+            "error": "Program not found",
+            "message": res.reason,
+        }
+    elif res.status_code == 405:
+        return {
+            "statusCode": res.status_code,
+            "error": "Method Not Allowed",
+            "message": res.json(),
+        }
+    elif res.status_code == 409:
+        return {
+            "statusCode": res.status_code,
+            "error": "Duplicate entity found",
+            "message": res.json(),
+        }
+    elif res.status_code == 500:
+        return {
+            "statusCode": res.status_code,
+            "error": "Internal Server Error",
+            "message": res.json(),
+        }
+    elif res.status_code == 502:
+        return {
+            "statusCode": res.status_code,
+            "error": "Bad Gateway",
+            "message": res.json(),
+        }
+    elif res.status_code == 503:
+        return {
+            "statusCode": res.status_code,
+            "error": "Service Unavailable",
+            "message": res.json(),
+        }
+
+
+class ProductsSchema(Schema):
+    Sku = fields.String(required=True, nullable=False)
+    Value = fields.Integer(required=True, nullable=True)
+    Quantity = fields.Integer(required=True, nullable=True)
+    EmbossedTextId = fields.Integer()
+    Packaging = fields.String()
+    MessageText = fields.String()
+    MessageRecipientName = fields.String()
+    MessageSenderName = fields.String()
+
+
+class RecipientsSchema(Schema):
+    ShippingMethod = fields.String(required=True, nullable=False)
+    LanguageCultureCode = fields.String()
+    FirstName = fields.String(required=True, nullable=False)
+    LastName = fields.String(required=True, nullable=False)
+    EmailAddress = fields.String(required=True, nullable=False)
+    Address1 = fields.String(required=True, nullable=False)
+    Address2 = fields.String(required=False, nullable=True)
+    City = fields.String(required=True, nullable=False)
+    StateProvinceCode = fields.String(required=True, nullable=False)
+    PostalCode = fields.String(required=True, nullable=False)
+    CountryCode = fields.String(required=True, nullable=False)
+    DeliverEmail = fields.Boolean(required=True, nullable=False)
+    Products = fields.List(fields.Nested(ProductsSchema))
+
+
+class OrderSchema(Schema):
+    PurchaseOrderNumber = fields.String(required=True, nullable=False)
+    CatalogId = fields.Integer(required=True, nullable=True)
+    Metadata = fields.String(required=True, nullable=False)
+    CustomerOrderId = fields.String(required=True, nullable=False)
+
+    id = fields.Integer()
+    name = fields.String()
+    OrderUri = fields.String()
+    CreatedOn = fields.DateTime()
+    OrderStatus = fields.String()
+    Message = fields.String()
+    TotalFaceValue = fields.Integer()
+    ProgramId = fields.Integer()
+    TotalFees = fields.Integer()
+    TotalDiscounts = fields.Integer()
+    TotalCustomerCost = fields.Integer()
+    EmailTheme = fields.String()
+    Recipients = fields.List(fields.Nested(RecipientsSchema))
+
+
+def lambda_handler(event, context):
+    """
+    expected payload
+            {
+          "OrderUri": "string",
+          "CreatedOn": "2019-06-13T13:50:31Z",
+          "OrderStatus": "Pending",
+          "Message": "string",
+          "PurchaseOrderNumber": "string",
+          "ProgramId": 0,
+          "CatalogId": 0,
+          "Metadata": "string",
+          "TotalFaceValue": 0,
+          "TotalFees": 0,
+          "TotalDiscounts": 0,
+          "TotalCustomerCost": 0,
+          "CustomerOrderId": "string",
+          "EmailTheme": "string",
+          "Recipients": [
+            {
+              "ShippingMethod": "string",
+              "LanguageCultureCode": "string",
+              "FirstName": "string",
+              "LastName": "string",
+              "EmailAddress": "string",
+              "Address1": "string",
+              "Address2": "string",
+              "City": "string",
+              "StateProvinceCode": "string",
+              "PostalCode": "string",
+              "CountryCode": "string",
+              "DeliverEmail": True,
+              "Products": [
+                {
+                  "Sku": "string",
+                  "Value": 0,
+                  "Quantity": 0,
+                  "EmbossedTextId": 0,
+                  "Packaging": "string",
+                  "MessageText": "string",
+                  "MessageRecipientName": "string",
+                  "MessageSenderName": "string"
+                }
+              ]
+            }
+          ]
+        }
+    """
+    event = {
+        "PurchaseOrderNumber": "test017",
+        "CatalogId": 1,
+        "Metadata": "test",
+        "CustomerOrderId": "testing0032",
+        "Recipients": [
+            {
+                "ShippingMethod": "Email",
+                "FirstName": "string f",
+                "LastName": "string l",
+                "EmailAddress": "phani@storecashapp.com",
+                "Address1": "34500 Fremont Blvd",
+                "Address2": "string",
+                "City": "Fremont",
+                "StateProvinceCode": "CA",
+                "PostalCode": "94538",
+                "CountryCode": "US",
+                "DeliverEmail": True,
+                "Products": [{"Sku": "VUSA-D-V-00", "Value": 5, "Quantity": 1}],
+            }
+        ],
+    }
+    try:
+        # validate post payload
+        OrderSchema().load(event)
+    except Exception as e:
+        return e
+
+    headers = {
+        "Authorization": "Bearer E5arEe4alFO7SsRmZcdR4t1g4e9DdTvP6gS-BiIYyqmZzTL6N-Ddy_Jfv3MfhKCOUcq8ie3oUIESGoGAKnQrhH-Zlcf_MBUMsWsnE_tdtI5-5PEOfThgsoB0Okvv88tzaIvZln-2akKfS4SlUH58MNguNHgVostPs9Xe_f6He_yBq93db4Ny9ABVwbyipJQLR0rDd2lc4q6UjUF0iQhyOedidqEPbwvvCVEcoyuhmvppzV9egXX1ZDM6n7IjmeiaoBhd16wxhRkZ491rQxAgNLDdcOpX15MWC4MVTrW_AbOTMDeKV-am1k1R-b4nrLJAgclONoRJvxyKA0mN8bHgk3yVT1CSEclCQ1MYTJrut4W78wVTqwwwSWBbZTy-xgZAYELGIW7Y9TP_uMOJjLtAZ4AeY5i8NAO1P3fkdr-LtGWzM1mmG7gazwoYIaL57qwGOa9As8iKNTe2Q2JBkyC1HYtSvbCW5Um1KcRb5TU43mBTzTALY5a02e7oomxGgogv",
+        "ProgramId": "6416",
+    }
+
+    url = f"{blueprint_api}/Orders/Immediate"
+    res = requests.post(url=url, headers=headers, json=event)
+    if res.status_code == 201:
+        try:
+            # validate response
+            OrderSchema().load(res.json())
+            return {
+                "statusCode": res.status_code,
+                "body": res.json(),
+            }
+        except Exception as e:
+            return {
+                "statusCode": res.status_code,
+                "body": e,
+            }
+    return common_errors(res)

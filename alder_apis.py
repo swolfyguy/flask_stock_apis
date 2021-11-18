@@ -3,7 +3,6 @@ import requests
 
 from marshmallow import Schema, fields
 
-
 blueprint_app_api = "https://app.giftango.com"
 blueprint_api = "https://api.giftango.com"
 
@@ -209,22 +208,23 @@ class FulfillmentSchema(Schema):
 def retrieve_programs(event, context):
     url = f"{blueprint_app_api}/programs/programs"
     headers = {
-        "Authorization": "Bearer LSbfKxFTuF75r1vMpkO9UTIiX4Q3TkdAGPoKEE8kumPVPPZSK8ob3ipX8Ix14IJucaHwe0FC-Widy5YuKR7ukjdET4VRoblkQhNitIsHo19neZK-rM-K1CAV_h_NK5lwiuf-YPSLt9Zz9423ZpeCBIZ9VOKfsmKxDtG30kpSUHtzF2wu1-30G00uFPd7PDyM36e_1h0l9MZpel1yrTIMgcRLhHrcP2MiinTIQBhz6yCAXdoiSCOJi3LuJWzAwExS0naTo7Egy6qfR89OF3Cc2tp1bWcgIZpVpAOdN84mo_UiPT6RoLo0evKhvj1-fyaZW-h4fBRrnjJscsffXBxm-DGdGA5Cg6BQapH6L_KRmnKUmGWoTklIM2fAa1hehqd06fGDNFM0U5de8g2ikciKCrTvlmVibIYAuFKXXDFfn7-UOikd216hi1ILz3VPJMPbIj4rt-KW-wi83E3ObMgQPw84S1ZvwLZMBhaU2UjAnGdizzuIzCCIn1_4wfT4uIud"
+        "Authorization": "Bearer dwFWBtfG0jwecoxlU4sRbZwht_IIVbWfwna3qYSVZ5w-1lnW8qqG4DQ_PZWc00YrlRFCR4IVOdOHwsK2fdHT03uM2ATQpB0NWJ9YYn-NdNHLtRkRCYX1BsYnNAApt_bSpf8JPVp2ieyCHdsBmjsSMajdPUiJHQIpTVH6CrNRXiaSkvqisxDN8AwGcO0Hn3vwzWymorhSLIIivGnEagZlpwKOTtNckrUGDhfBGXw0vgJ9SOijYKd2IkubQMB9b_4Zt7fVqxz_yVtSjKwko99qxCHW92-NpSIGmBo3NEatzG-QT8cf0TNGplirr9xw15n2rqBypALOykMhuJmmhVKMbs0AY-IASz6IXkGrzjCRGZaKyKEcs31GWwAXroPUs42UF3voZdsAlPPGFRyaBfjvEK4t6UnNDsjqQ6b7g95jC1JTqA2noV4qqjAxTznFGkxSNnS0VDmGu_AzgiLQYdhT9w629ENXTKzXusYLNcRyyQnOEGExRIAu9f9ZkZ5Uybog"
     }
     res = requests.get(url=url, headers=headers)
 
     if res.status_code == 200:
-        # validate response
-        data, errors = ProgramSchema(many=True).load(res.json())
-        if errors:
+        try:
+            # validate response
+            ProgramSchema(many=True).load(res.json())
             return {
                 "statusCode": res.status_code,
-                "body": errors,
+                "body": res.json(),
             }
-        return {
-            "statusCode": res.status_code,
-            "body": res.json(),
-        }
+        except Exception as e:
+            return {
+                "statusCode": res.status_code,
+                "body": e,
+            }
     return common_errors(res)
 
 
@@ -232,22 +232,23 @@ def get_programs_catalogue(event, context):
     programId = "6416"
     url = f"{blueprint_app_api}/programs/programs/{programId}/catalogs"
     headers = {
-        "Authorization": "Bearer rNVajBf_4UAwF0eOxECdZED1jcgkkzKSSxKDmGOT90QQQEVq5lDOR4jTtjPKEUPfs2kEhtBMA4MbW7E77JPk4VQ5N7wQXxoaxGnBGlJY0x5zzqQhCXjldfvK_c-NJhc6bMKbRIWAFUAOHAIKQ6ZzMw9OQMQxEb0k92F3cWXKKA3HbeQHjSQFTGsHSOyGx18-OUGYOqTEWn3Tnn_1H9V3AZZn9cXzT3MN0qMKMzpkm5pTCWIEdvXnGRulciEuYRjCPpKELTuvTKxqb2fP9_T5344HDmnkatQ-ddcH_lQeer2uBZpRDxYWsKtTipmfvQcod_mrmvx6Lu2PeeJhDYiLI_IxBJl6mXGVdIMdNH0DDNIHfhm2A4Rc2-tJxstQGFgUpPbdZjzTskAyoRzM0ChtwrtC6k7DIYIKwcmS3mB5a7e4xjmA-RFMwiH5-PVucI9XZuFgF05ZwCiuCVjhqxX7TrB0KOUgHeVoeDINmRmVhBQTdsLOSiNRtLCjgzbi_Lr2"
+        "Authorization": "Bearer dwFWBtfG0jwecoxlU4sRbZwht_IIVbWfwna3qYSVZ5w-1lnW8qqG4DQ_PZWc00YrlRFCR4IVOdOHwsK2fdHT03uM2ATQpB0NWJ9YYn-NdNHLtRkRCYX1BsYnNAApt_bSpf8JPVp2ieyCHdsBmjsSMajdPUiJHQIpTVH6CrNRXiaSkvqisxDN8AwGcO0Hn3vwzWymorhSLIIivGnEagZlpwKOTtNckrUGDhfBGXw0vgJ9SOijYKd2IkubQMB9b_4Zt7fVqxz_yVtSjKwko99qxCHW92-NpSIGmBo3NEatzG-QT8cf0TNGplirr9xw15n2rqBypALOykMhuJmmhVKMbs0AY-IASz6IXkGrzjCRGZaKyKEcs31GWwAXroPUs42UF3voZdsAlPPGFRyaBfjvEK4t6UnNDsjqQ6b7g95jC1JTqA2noV4qqjAxTznFGkxSNnS0VDmGu_AzgiLQYdhT9w629ENXTKzXusYLNcRyyQnOEGExRIAu9f9ZkZ5Uybog"
     }
     res = requests.get(url=url, headers=headers)
 
     if res.status_code == 200:
-        # validate response
-        data, errors = ProgramSchema(many=True).load(res.json())
-        if errors:
+        try:
+            # validate response
+            ProgramSchema(many=True).load(res.json())
             return {
                 "statusCode": res.status_code,
-                "body": errors,
+                "body": res.json(),
             }
-        return {
-            "statusCode": res.status_code,
-            "body": res.json(),
-        }
+        except Exception as e:
+            return {
+                "statusCode": res.status_code,
+                "body": e,
+            }
     return common_errors(res)
 
 
@@ -256,23 +257,25 @@ def get_catalogue(event, context):
     catalogId = "1"
     url = f"{blueprint_app_api}/programs/programs/{programId}/catalogs/{catalogId}"
     headers = {
-        "Authorization": "Bearer XX4zeK4cPaimY4PSqNlg8TsOS2LSEjtC-W1jjl9X9OTUpvEcpPw13YdpozzJlvK8ieHyHazO43OnL0zRMlmnk4xhd6RfoRyYhKHeoO358Aexkqpvu_gOiclBLXKnKsSJBDu8orErfoEx5Imkot_Qg-M2d6iv1wgwjhj5sWSO0pPbTj4dAlDhpmDZdqOhu2ZriQyY7Y0P_jR-ZM46cDZXtBIZznQg_XrimGTSzq3tT2MIqtNwxmg-sv8ZPGgq-gxiU23KxWSI2mgOqxTeIAlZs4v6vU12JV0_AjxHuTDOjn2KxKE9TeJZcCLr_KXwB3fOKaEU3Yrjg5TeQ-QYuOv7R6B3ZFdB5sR4iEdvVoRqPChXlc1Yi5xZuO6C5EzOtj1YQGJAeLQ-QnMBgkYUZXtgWbvy8CBIPaOQbE4vOyvIqR3QoVLBUM2v0UMOTptP2dBcqmKwTdasS1wChun5EsCWKOdJ--2o4yl5TJfId_t2sJCprCB1ht-pNLgb7jxBsQbS"
+        "Authorization": "Bearer dwFWBtfG0jwecoxlU4sRbZwht_IIVbWfwna3qYSVZ5w-1lnW8qqG4DQ_PZWc00YrlRFCR4IVOdOHwsK2fdHT03uM2ATQpB0NWJ9YYn-NdNHLtRkRCYX1BsYnNAApt_bSpf8JPVp2ieyCHdsBmjsSMajdPUiJHQIpTVH6CrNRXiaSkvqisxDN8AwGcO0Hn3vwzWymorhSLIIivGnEagZlpwKOTtNckrUGDhfBGXw0vgJ9SOijYKd2IkubQMB9b_4Zt7fVqxz_yVtSjKwko99qxCHW92-NpSIGmBo3NEatzG-QT8cf0TNGplirr9xw15n2rqBypALOykMhuJmmhVKMbs0AY-IASz6IXkGrzjCRGZaKyKEcs31GWwAXroPUs42UF3voZdsAlPPGFRyaBfjvEK4t6UnNDsjqQ6b7g95jC1JTqA2noV4qqjAxTznFGkxSNnS0VDmGu_AzgiLQYdhT9w629ENXTKzXusYLNcRyyQnOEGExRIAu9f9ZkZ5Uybog"
     }
     res = requests.get(url=url, headers=headers)
 
     if res.status_code == 200:
-        # validate response
-        data, errors = ProgramWithProductsSchema().load(res.json())
-        if errors:
+        try:
+            # validate response
+            ProgramWithProductsSchema().load(res.json())
             return {
                 "statusCode": res.status_code,
-                "body": errors,
+                "body": res.json(),
             }
-        return {
-            "statusCode": res.status_code,
-            "body": data,
-        }
+        except Exception as e:
+            return {
+                "statusCode": res.status_code,
+                "body": e,
+            }
     return common_errors(res)
+
 
 def get_catalogue_assets(event, context):
     programId = 6416
@@ -281,7 +284,7 @@ def get_catalogue_assets(event, context):
         f"{blueprint_app_api}/programs/programs/{programId}/catalogs/{catalogId}/assets"
     )
     headers = {
-        "Authorization": "Bearer XX4zeK4cPaimY4PSqNlg8TsOS2LSEjtC-W1jjl9X9OTUpvEcpPw13YdpozzJlvK8ieHyHazO43OnL0zRMlmnk4xhd6RfoRyYhKHeoO358Aexkqpvu_gOiclBLXKnKsSJBDu8orErfoEx5Imkot_Qg-M2d6iv1wgwjhj5sWSO0pPbTj4dAlDhpmDZdqOhu2ZriQyY7Y0P_jR-ZM46cDZXtBIZznQg_XrimGTSzq3tT2MIqtNwxmg-sv8ZPGgq-gxiU23KxWSI2mgOqxTeIAlZs4v6vU12JV0_AjxHuTDOjn2KxKE9TeJZcCLr_KXwB3fOKaEU3Yrjg5TeQ-QYuOv7R6B3ZFdB5sR4iEdvVoRqPChXlc1Yi5xZuO6C5EzOtj1YQGJAeLQ-QnMBgkYUZXtgWbvy8CBIPaOQbE4vOyvIqR3QoVLBUM2v0UMOTptP2dBcqmKwTdasS1wChun5EsCWKOdJ--2o4yl5TJfId_t2sJCprCB1ht-pNLgb7jxBsQbS"
+        "Authorization": "Bearer dwFWBtfG0jwecoxlU4sRbZwht_IIVbWfwna3qYSVZ5w-1lnW8qqG4DQ_PZWc00YrlRFCR4IVOdOHwsK2fdHT03uM2ATQpB0NWJ9YYn-NdNHLtRkRCYX1BsYnNAApt_bSpf8JPVp2ieyCHdsBmjsSMajdPUiJHQIpTVH6CrNRXiaSkvqisxDN8AwGcO0Hn3vwzWymorhSLIIivGnEagZlpwKOTtNckrUGDhfBGXw0vgJ9SOijYKd2IkubQMB9b_4Zt7fVqxz_yVtSjKwko99qxCHW92-NpSIGmBo3NEatzG-QT8cf0TNGplirr9xw15n2rqBypALOykMhuJmmhVKMbs0AY-IASz6IXkGrzjCRGZaKyKEcs31GWwAXroPUs42UF3voZdsAlPPGFRyaBfjvEK4t6UnNDsjqQ6b7g95jC1JTqA2noV4qqjAxTznFGkxSNnS0VDmGu_AzgiLQYdhT9w629ENXTKzXusYLNcRyyQnOEGExRIAu9f9ZkZ5Uybog"
     }
     res = requests.get(url=url, headers=headers)
 
@@ -347,7 +350,7 @@ def submit_immediate_order(event, context):
         "PurchaseOrderNumber": "test007",
         "CatalogId": 1,
         "Metadata": "test",
-        "CustomerOrderId": "testing002",
+        "CustomerOrderId": "testing0042",
         "Recipients": [
             {
                 "ShippingMethod": "Email",
@@ -365,33 +368,37 @@ def submit_immediate_order(event, context):
             }
         ],
     }
-    # validate post payload
-    data, errors = OrderSchema().load(event)
-    if errors:
-        return errors
+    try:
+        # validate post payload
+        OrderSchema().load(event)
+    except Exception as e:
+        return e
 
     headers = {
-        "Authorization": "Bearer XX4zeK4cPaimY4PSqNlg8TsOS2LSEjtC-W1jjl9X9OTUpvEcpPw13YdpozzJlvK8ieHyHazO43OnL0zRMlmnk4xhd6RfoRyYhKHeoO358Aexkqpvu_gOiclBLXKnKsSJBDu8orErfoEx5Imkot_Qg-M2d6iv1wgwjhj5sWSO0pPbTj4dAlDhpmDZdqOhu2ZriQyY7Y0P_jR-ZM46cDZXtBIZznQg_XrimGTSzq3tT2MIqtNwxmg-sv8ZPGgq-gxiU23KxWSI2mgOqxTeIAlZs4v6vU12JV0_AjxHuTDOjn2KxKE9TeJZcCLr_KXwB3fOKaEU3Yrjg5TeQ-QYuOv7R6B3ZFdB5sR4iEdvVoRqPChXlc1Yi5xZuO6C5EzOtj1YQGJAeLQ-QnMBgkYUZXtgWbvy8CBIPaOQbE4vOyvIqR3QoVLBUM2v0UMOTptP2dBcqmKwTdasS1wChun5EsCWKOdJ--2o4yl5TJfId_t2sJCprCB1ht-pNLgb7jxBsQbS"
-                         ,"ProgramId": "6416",
+        "Authorization": "Bearer E5arEe4alFO7SsRmZcdR4t1g4e9DdTvP6gS-BiIYyqmZzTL6N-Ddy_Jfv3MfhKCOUcq8ie3oUIESGoGAKnQrhH-Zlcf_MBUMsWsnE_tdtI5-5PEOfThgsoB0Okvv88tzaIvZln-2akKfS4SlUH58MNguNHgVostPs9Xe_f6He_yBq93db4Ny9ABVwbyipJQLR0rDd2lc4q6UjUF0iQhyOedidqEPbwvvCVEcoyuhmvppzV9egXX1ZDM6n7IjmeiaoBhd16wxhRkZ491rQxAgNLDdcOpX15MWC4MVTrW_AbOTMDeKV-am1k1R-b4nrLJAgclONoRJvxyKA0mN8bHgk3yVT1CSEclCQ1MYTJrut4W78wVTqwwwSWBbZTy-xgZAYELGIW7Y9TP_uMOJjLtAZ4AeY5i8NAO1P3fkdr-LtGWzM1mmG7gazwoYIaL57qwGOa9As8iKNTe2Q2JBkyC1HYtSvbCW5Um1KcRb5TU43mBTzTALY5a02e7oomxGgogv",
+        "ProgramId": "6416",
     }
 
     url = f"{blueprint_api}/Orders/Immediate"
     res = requests.post(url=url, headers=headers, json=event)
     if res.status_code == 201:
-        # validate response
-        data, errors = OrderSchema().load(res.json())
-        if errors:
+        try:
+            # validate response
+            OrderSchema().load(res.json())
             return {
                 "statusCode": res.status_code,
-                "body": errors,
+                "body": res.json(),
             }
-        return {
-            "statusCode": res.status_code,
-            "body": res.json(),
-        }
+        except Exception as e:
+            return {
+                "statusCode": res.status_code,
+                "body": e,
+            }
     return common_errors(res)
 
-submit_immediate_order("","")
+
+print(submit_immediate_order("",""))
+
 
 def get_order(event, context):
     orderUri = "orderUri"
@@ -399,22 +406,23 @@ def get_order(event, context):
 
     url = f"{blueprint_api}/Orders/{orderUri}"
     headers = {
-        "Authorization": "Bearer rNVajBf_4UAwF0eOxECdZED1jcgkkzKSSxKDmGOT90QQQEVq5lDOR4jTtjPKEUPfs2kEhtBMA4MbW7E77JPk4VQ5N7wQXxoaxGnBGlJY0x5zzqQhCXjldfvK_c-NJhc6bMKbRIWAFUAOHAIKQ6ZzMw9OQMQxEb0k92F3cWXKKA3HbeQHjSQFTGsHSOyGx18-OUGYOqTEWn3Tnn_1H9V3AZZn9cXzT3MN0qMKMzpkm5pTCWIEdvXnGRulciEuYRjCPpKELTuvTKxqb2fP9_T5344HDmnkatQ-ddcH_lQeer2uBZpRDxYWsKtTipmfvQcod_mrmvx6Lu2PeeJhDYiLI_IxBJl6mXGVdIMdNH0DDNIHfhm2A4Rc2-tJxstQGFgUpPbdZjzTskAyoRzM0ChtwrtC6k7DIYIKwcmS3mB5a7e4xjmA-RFMwiH5-PVucI9XZuFgF05ZwCiuCVjhqxX7TrB0KOUgHeVoeDINmRmVhBQTdsLOSiNRtLCjgzbi_Lr2"
+        "Authorization": "Bearer dwFWBtfG0jwecoxlU4sRbZwht_IIVbWfwna3qYSVZ5w-1lnW8qqG4DQ_PZWc00YrlRFCR4IVOdOHwsK2fdHT03uM2ATQpB0NWJ9YYn-NdNHLtRkRCYX1BsYnNAApt_bSpf8JPVp2ieyCHdsBmjsSMajdPUiJHQIpTVH6CrNRXiaSkvqisxDN8AwGcO0Hn3vwzWymorhSLIIivGnEagZlpwKOTtNckrUGDhfBGXw0vgJ9SOijYKd2IkubQMB9b_4Zt7fVqxz_yVtSjKwko99qxCHW92-NpSIGmBo3NEatzG-QT8cf0TNGplirr9xw15n2rqBypALOykMhuJmmhVKMbs0AY-IASz6IXkGrzjCRGZaKyKEcs31GWwAXroPUs42UF3voZdsAlPPGFRyaBfjvEK4t6UnNDsjqQ6b7g95jC1JTqA2noV4qqjAxTznFGkxSNnS0VDmGu_AzgiLQYdhT9w629ENXTKzXusYLNcRyyQnOEGExRIAu9f9ZkZ5Uybog"
     }
     res = requests.get(url=url, headers=headers)
 
     if res.status_code == 200:
-        # validate response
-        date, errors = OrderSchema().load(res.json())
-        if errors:
+        try:
+            # validate response
+            OrderSchema().load(res.json())
             return {
                 "statusCode": res.status_code,
-                "body": errors,
+                "body": res.json(),
             }
-        return {
-            "statusCode": res.status_code,
-            "body": res.json(),
-        }
+        except Exception as e:
+            return {
+                "statusCode": res.status_code,
+                "body": e,
+            }
     return common_errors(res)
 
 
@@ -424,45 +432,47 @@ def get_cards_from_order(event, context):
 
     url = f"{blueprint_api}/Orders/{orderUri}/cards"
     headers = {
-        "Authorization": "Bearer rNVajBf_4UAwF0eOxECdZED1jcgkkzKSSxKDmGOT90QQQEVq5lDOR4jTtjPKEUPfs2kEhtBMA4MbW7E77JPk4VQ5N7wQXxoaxGnBGlJY0x5zzqQhCXjldfvK_c-NJhc6bMKbRIWAFUAOHAIKQ6ZzMw9OQMQxEb0k92F3cWXKKA3HbeQHjSQFTGsHSOyGx18-OUGYOqTEWn3Tnn_1H9V3AZZn9cXzT3MN0qMKMzpkm5pTCWIEdvXnGRulciEuYRjCPpKELTuvTKxqb2fP9_T5344HDmnkatQ-ddcH_lQeer2uBZpRDxYWsKtTipmfvQcod_mrmvx6Lu2PeeJhDYiLI_IxBJl6mXGVdIMdNH0DDNIHfhm2A4Rc2-tJxstQGFgUpPbdZjzTskAyoRzM0ChtwrtC6k7DIYIKwcmS3mB5a7e4xjmA-RFMwiH5-PVucI9XZuFgF05ZwCiuCVjhqxX7TrB0KOUgHeVoeDINmRmVhBQTdsLOSiNRtLCjgzbi_Lr2"
+        "Authorization": "Bearer dwFWBtfG0jwecoxlU4sRbZwht_IIVbWfwna3qYSVZ5w-1lnW8qqG4DQ_PZWc00YrlRFCR4IVOdOHwsK2fdHT03uM2ATQpB0NWJ9YYn-NdNHLtRkRCYX1BsYnNAApt_bSpf8JPVp2ieyCHdsBmjsSMajdPUiJHQIpTVH6CrNRXiaSkvqisxDN8AwGcO0Hn3vwzWymorhSLIIivGnEagZlpwKOTtNckrUGDhfBGXw0vgJ9SOijYKd2IkubQMB9b_4Zt7fVqxz_yVtSjKwko99qxCHW92-NpSIGmBo3NEatzG-QT8cf0TNGplirr9xw15n2rqBypALOykMhuJmmhVKMbs0AY-IASz6IXkGrzjCRGZaKyKEcs31GWwAXroPUs42UF3voZdsAlPPGFRyaBfjvEK4t6UnNDsjqQ6b7g95jC1JTqA2noV4qqjAxTznFGkxSNnS0VDmGu_AzgiLQYdhT9w629ENXTKzXusYLNcRyyQnOEGExRIAu9f9ZkZ5Uybog"
     }
     res = requests.get(url=url, headers=headers)
 
     if res.status_code == 200:
-        # validate response
-        data, errors = CardsSchema(many=True).load(res.json())
-        if errors:
+        try:
+            # validate response
+            CardsSchema().load(res.json())
             return {
                 "statusCode": res.status_code,
-                "body": errors,
+                "body": res.json(),
             }
-        return {
-            "statusCode": res.status_code,
-            "body": res.json(),
-        }
+        except Exception as e:
+            return {
+                "statusCode": res.status_code,
+                "body": e,
+            }
     return common_errors(res)
 
 
 def get_fullfillment(event, context):
     url = f"{blueprint_api}/Fulfillment"
     headers = {
-        "Authorization": "Bearer lvfVjvNUii7386VTRmx_yYNf9WRzh3wDZEZHD6Mu9SBgVD6qp7syyfpBmQvwLPYS-Jkp5NItOrBPQ2MwZQaLisi1_dUcFcO0v7FU8rlSHemZab1sO1Zx4BFCT_xNBuLjGn4b2exny620Ko2RwmSuowLoKm7nScg9KtZKIZEO1bRpGq15yrV4IITPnuC1tNvDLG8GAkOQf0BjyG3cJdwKVr3zOfLgbRb7silbE6uID794suTGnwobt6Rd_ChVpRjPnuqq9JhVm4svv8nmYyAA2DtRvXtZfPKcyXNZcoD4IoiD16ZZnGZwniuu3mjvbmOBX6bd9QScO21-w44pO5l7s2FauHScGt_q25B30iCDK-WctLhtb9ylWyObFDCRlwu3nIYjZGt8mkBWH8UUZklAxkVgwb3i1FIhjYYcFUhJBNDIR1J3g38I1q2ywm2M2APEzzJlSndvNlhwH9NLI3xd5_6y_jRBevtW2DOlZ6RBBWMPzDReg6gmp7qaOiqQ6nJR",
+        "Authorization": "Bearer dwFWBtfG0jwecoxlU4sRbZwht_IIVbWfwna3qYSVZ5w-1lnW8qqG4DQ_PZWc00YrlRFCR4IVOdOHwsK2fdHT03uM2ATQpB0NWJ9YYn-NdNHLtRkRCYX1BsYnNAApt_bSpf8JPVp2ieyCHdsBmjsSMajdPUiJHQIpTVH6CrNRXiaSkvqisxDN8AwGcO0Hn3vwzWymorhSLIIivGnEagZlpwKOTtNckrUGDhfBGXw0vgJ9SOijYKd2IkubQMB9b_4Zt7fVqxz_yVtSjKwko99qxCHW92-NpSIGmBo3NEatzG-QT8cf0TNGplirr9xw15n2rqBypALOykMhuJmmhVKMbs0AY-IASz6IXkGrzjCRGZaKyKEcs31GWwAXroPUs42UF3voZdsAlPPGFRyaBfjvEK4t6UnNDsjqQ6b7g95jC1JTqA2noV4qqjAxTznFGkxSNnS0VDmGu_AzgiLQYdhT9w629ENXTKzXusYLNcRyyQnOEGExRIAu9f9ZkZ5Uybog",
         "ProgramId": "6416",
     }
     res = requests.get(url=url, headers=headers)
 
     if res.status_code == 200:
-        # validate response
-        data, errors = FulfillmentSchema(many=True).load(res.json())
-        if errors:
+        try:
+            # validate response
+            FulfillmentSchema(many=True).load(res.json())
             return {
                 "statusCode": res.status_code,
-                "body": errors,
+                "body": res.json(),
             }
-        return {
-            "statusCode": res.status_code,
-            "body": res.json(),
-        }
+        except Exception as e:
+            return {
+                "statusCode": res.status_code,
+                "body": e,
+            }
     return common_errors(res)
 
 
@@ -496,7 +506,7 @@ def generate_csv():
     catalogId = "1"
     url = "https://app.giftango.com/programs/programs/6416/catalogs/1"
     headers = {
-        "Authorization": "Bearer rNVajBf_4UAwF0eOxECdZED1jcgkkzKSSxKDmGOT90QQQEVq5lDOR4jTtjPKEUPfs2kEhtBMA4MbW7E77JPk4VQ5N7wQXxoaxGnBGlJY0x5zzqQhCXjldfvK_c-NJhc6bMKbRIWAFUAOHAIKQ6ZzMw9OQMQxEb0k92F3cWXKKA3HbeQHjSQFTGsHSOyGx18-OUGYOqTEWn3Tnn_1H9V3AZZn9cXzT3MN0qMKMzpkm5pTCWIEdvXnGRulciEuYRjCPpKELTuvTKxqb2fP9_T5344HDmnkatQ-ddcH_lQeer2uBZpRDxYWsKtTipmfvQcod_mrmvx6Lu2PeeJhDYiLI_IxBJl6mXGVdIMdNH0DDNIHfhm2A4Rc2-tJxstQGFgUpPbdZjzTskAyoRzM0ChtwrtC6k7DIYIKwcmS3mB5a7e4xjmA-RFMwiH5-PVucI9XZuFgF05ZwCiuCVjhqxX7TrB0KOUgHeVoeDINmRmVhBQTdsLOSiNRtLCjgzbi_Lr2"
+        "Authorization": "Bearer dwFWBtfG0jwecoxlU4sRbZwht_IIVbWfwna3qYSVZ5w-1lnW8qqG4DQ_PZWc00YrlRFCR4IVOdOHwsK2fdHT03uM2ATQpB0NWJ9YYn-NdNHLtRkRCYX1BsYnNAApt_bSpf8JPVp2ieyCHdsBmjsSMajdPUiJHQIpTVH6CrNRXiaSkvqisxDN8AwGcO0Hn3vwzWymorhSLIIivGnEagZlpwKOTtNckrUGDhfBGXw0vgJ9SOijYKd2IkubQMB9b_4Zt7fVqxz_yVtSjKwko99qxCHW92-NpSIGmBo3NEatzG-QT8cf0TNGplirr9xw15n2rqBypALOykMhuJmmhVKMbs0AY-IASz6IXkGrzjCRGZaKyKEcs31GWwAXroPUs42UF3voZdsAlPPGFRyaBfjvEK4t6UnNDsjqQ6b7g95jC1JTqA2noV4qqjAxTznFGkxSNnS0VDmGu_AzgiLQYdhT9w629ENXTKzXusYLNcRyyQnOEGExRIAu9f9ZkZ5Uybog"
     }
     catalog_res = requests.get(url=url, headers=headers)
 
@@ -571,194 +581,114 @@ def generate_csv():
             fc.writerows(csv_row)
 
 
-response_ = {
-  "name": "StoreCash TEST USD",
-  "id": 1,
-  "programId": 6416,
-  "products": [
-    {
-      "productName": "Venue 1 - Golf",
-      "brandName": "Venue USD",
-      "productSku": "VUSD-D-V-00",
-      "isDigital": True,
-      "maxAmount": 2000,
-      "minAmount": 0.01,
-      "description": "",
-      "modifiedOn": "2019-11-18T10:30:57.7770279",
-      "currencyCode": "USD",
-      "productType": "GiftCard",
-      "categories": []
-    },
-    {
-      "productName": "Venue 2 - Spa",
-      "brandName": "Venue USD",
-      "productSku": "VUSA-D-2500-00",
-      "isDigital": True,
-      "maxAmount": 25,
-      "minAmount": 25,
-      "description": "",
-      "modifiedOn": "2019-11-18T10:16:54.6078712",
-      "currencyCode": "USD",
-      "productType": "GiftCard",
-      "categories": []
-    },
-    {
-      "productName": "Venue 2 - Spa",
-      "brandName": "Venue USD",
-      "productSku": "VUSA-D-5000-00",
-      "isDigital": True,
-      "maxAmount": 50,
-      "minAmount": 50,
-      "description": "",
-      "modifiedOn": "2019-11-18T10:17:06.3467736",
-      "currencyCode": "USD",
-      "productType": "GiftCard",
-      "categories": []
-    },
-    {
-      "productName": "Venue 3 - Boutique",
-      "brandName": "Venue USD",
-      "productSku": "VUSD-D-10000-00",
-      "isDigital": True,
-      "maxAmount": 100,
-      "minAmount": 100,
-      "description": "",
-      "modifiedOn": "2019-11-18T10:17:34.5039384",
-      "currencyCode": "USD",
-      "productType": "GiftCard",
-      "categories": []
-    },
-    {
-      "productName": "Venue 4 - Resorts One Mimosa Brunch Buffet",
-      "brandName": "Venue USD",
-      "productSku": "VUSA-D-V-00",
-      "isDigital": True,
-      "maxAmount": 34.99,
-      "minAmount": 34.99,
-      "description": "One Mimosa Brunch Buffet",
-      "modifiedOn": "2019-11-18T10:17:55.8115717",
-      "currencyCode": "USD",
-      "productType": "Voucher",
-      "categories": []
-    },
-    {
-      "productName": "Venue 4 - Resorts One Suite Night Stay",
-      "brandName": "Venue USD",
-      "productSku": "VUSA-D-V-01",
-      "isDigital": True,
-      "maxAmount": 234.56,
-      "minAmount": 234.56,
-      "description": "One Suite Night Stay",
-      "modifiedOn": "2019-11-18T10:18:16.6491769",
-      "currencyCode": "USD",
-      "productType": "Voucher",
-      "categories": []
-    },
-    {
-      "productName": "Venue 5 - Fine Dining",
-      "brandName": "Venue USD",
-      "productSku": "VUSD-D-V-01",
-      "isDigital": True,
-      "maxAmount": 1000,
-      "minAmount": 5,
-      "description": "",
-      "modifiedOn": "2020-05-26T15:06:18.0254329",
-      "currencyCode": "USD",
-      "productType": "PrepaidGiftCard",
-      "categories": []
-    },
-    {
-      "productName": "Venue 1 - Golf",
-      "brandName": "Venue USD",
-      "productSku": "VUSD-P-V-00",
-      "isDigital": False,
-      "maxAmount": 2000,
-      "minAmount": 0.01,
-      "description": "",
-      "modifiedOn": "2020-06-15T15:50:10.8557187",
-      "currencyCode": "USD",
-      "productType": "GiftCard",
-      "categories": []
-    },
-    {
-      "productName": "Venue 2 - Spa",
-      "brandName": "Venue USD",
-      "productSku": "VUSA-P-2500-00",
-      "isDigital": False,
-      "maxAmount": 25,
-      "minAmount": 25,
-      "description": "",
-      "modifiedOn": "2019-11-18T10:17:18.2696908",
-      "currencyCode": "USD",
-      "productType": "GiftCard",
-      "categories": []
-    },
-    {
-      "productName": "Venue 3 - Boutique",
-      "brandName": "Venue USD",
-      "productSku": "VUSD-P-10000-00",
-      "isDigital": False,
-      "maxAmount": 100,
-      "minAmount": 100,
-      "description": "",
-      "modifiedOn": "2019-11-18T10:17:44.1436828",
-      "currencyCode": "USD",
-      "productType": "GiftCard",
-      "categories": []
-    },
-    {
-      "productName": "Venue 4 - Resorts One Mimosa Brunch Buffet",
-      "brandName": "Venue USD",
-      "productSku": "VUSA-P-V-00",
-      "isDigital": False,
-      "maxAmount": 34.99,
-      "minAmount": 34.99,
-      "description": "One Mimosa Brunch Buffet",
-      "modifiedOn": "2019-11-18T10:18:07.3944766",
-      "currencyCode": "USD",
-      "productType": "Voucher",
-      "categories": []
-    },
-    {
-      "productName": "Venue 5 - Prepaid",
-      "brandName": "Venue USD",
-      "productSku": "VUSD-P-V-01",
-      "isDigital": False,
-      "maxAmount": 2000,
-      "minAmount": 10,
-      "description": "",
-      "modifiedOn": "2020-06-15T15:57:47.9598741",
-      "currencyCode": "USD",
-      "productType": "PrepaidGiftCard",
-      "categories": []
-    },
-    {
-      "productName": "Venue 4 - Resorts One Suite Night Stay",
-      "brandName": "Venue USD",
-      "productSku": "VUSA-P-V-01",
-      "isDigital": False,
-      "maxAmount": 234.56,
-      "minAmount": 234.56,
-      "description": "One Suite Night Stay",
-      "modifiedOn": "2019-11-18T10:18:25.3608446",
-      "currencyCode": "USD",
-      "productType": "Voucher",
-      "categories": []
-    },
-    {
-      "productName": "Venue 2 - Spa",
-      "brandName": "Venue USD",
-      "productSku": "VUSA-P-7500-00",
-      "isDigital": False,
-      "maxAmount": 75,
-      "minAmount": 75,
-      "description": "",
-      "modifiedOn": "2019-11-18T10:17:26.619329",
-      "currencyCode": "USD",
-      "productType": "GiftCard",
-      "categories": []
-    }
-  ]
-}
 
-# ProgramWithProductsSchema().load(response_)
+import csv
+
+import requests
+from marshmallow import Schema, fields
+
+class CatalogueSchema(Schema):
+    id = fields.Integer(required=True, nullable=False)
+    programId = fields.Integer(required=True, nullable=False)
+    name = fields.String(required=True, nullable=False)
+    productName = fields.String(required=True, nullable=False)
+    brandName = fields.String(required=True, nullable=False)
+    productSku = fields.String(required=True, nullable=False)
+    maxAmount = fields.Integer(required=True, nullable=False)
+    minAmount = fields.Integer(required=True, nullable=False)
+    isDigital = fields.Boolean(required=True, nullable=False)
+    description = fields.String(required=True, nullable=False)
+    modifiedOn = fields.DateTime(required=True, nullable=False)
+    currencyCode = fields.String(required=True, nullable=False)
+    productType = fields.String(required=True, nullable=False)
+    categories = fields.List(fields.Str())
+
+
+def lambda_handler(event, context):
+    """
+    get all catalogues
+    loop through them
+    fetch one asset
+    and generate csv for all the fields containing on the left side of the document:
+        "https://docs.google.com/spreadsheets/d/10SXqUXZj9OCz0Ebzz26lfRiSCfzDashBlt25F9cYk3c/edit#gid=0"
+    """
+    programId = 6416
+    catalogId = "1"
+    url = "https://app.giftango.com/programs/programs/6416/catalogs/1"
+    headers = {
+        "Authorization": "Bearer b5VPeYwnCOi8jWn79mCUImmNFWmSbhZk_MFVpGyf66DM96QEezIZZAZfc4FIYbNw_s-LEa8g7HRb_PtdaDv251Jvd7I0u9IOmZ8VAra6iixTlOEw1KYgQ8WqLkIPB0eoknDE3ktEmkRthOmdxJ5mMkZPTj3W6y1kPHjY7Xxt-9J_4cxWeJRh_7evo7O3hTNv9KTiiWKCkEIqn0uN_sEsxMuPV5xsGfCfUINDUdzV4bxJ_PkiRZp3708qEZydoa40SfUKtryBz5lBD_4aeOfe06M4ldV2uGJj7nYK-E-v5WHqKE2WcsxyCBt0dzLgRlfN7QeGC5-PH2QLPMw3Lekelj172zhVVMio7sw-NYHc2Bt6cWeDuj5NUZ6RtJyXbS4xGB2h7I8svVbD4YjleQmGHY1iFEVk8l4N4GMz12cYPl-G282J1M5h6CGczCxCfFgA64VR_Ck5oKaDzK3JH6mohsfKoipNXmt2uMR0P6xhmRLKjPlQtwcIYLTj4seWZJ54"
+    }
+    catalog_res = requests.get(url=url, headers=headers)
+
+    catalog_asset_desc_res = requests.get(
+        url="https://app.giftango.com/programs/programs/6416/catalogs/1/assets",
+        headers=headers,
+    )
+
+    if catalog_res.status_code == 200 and catalog_asset_desc_res.status_code == 200:
+        # validate response
+        # CatalogueSchema().load(catalog_res.json())
+
+        product_sku_details_dict = {}
+        csv_row = []
+        for product in catalog_res.json()["products"]:
+            product_sku_details_dict.update(
+                {
+                    product["productSku"]: {
+                        "sku": product["productSku"],
+                        "name": product["productName"],
+                        "max": product["maxAmount"],
+                        "min": product["minAmount"],
+                        "updated_at": product["modifiedOn"],
+                        "currency": product["currencyCode"],
+                        "subcategory": product["categories"],
+                        "category": "INCOMM",
+                    }
+                }
+            )
+
+        db_field_mappings = {
+            "legaldisclaimer": "legald",
+            "redemptioninstructions": "inst",
+            "termsconditions": "terms",
+            "marketingdescription": "description",
+            "cardimage": "image",
+        }
+
+        asset_desc_dict = {}
+        for productSku_assets in catalog_asset_desc_res.json()[0]["products"]:
+            db_field_mappings_found = {
+                "legaldisclaimer": False,
+                "redemptioninstructions": False,
+                "termsconditions": False,
+                "marketingdescription": False,
+                "cardimage": False,
+            }
+            for asset in productSku_assets["assets"]:
+                if asset["type"] in db_field_mappings:
+                    asset_desc_dict.update(
+                        {db_field_mappings[asset["type"]]: asset.get("text", "")}
+                    )
+                    db_field_mappings_found[asset["type"]] = True
+            for mapping, found in db_field_mappings_found.items():
+                if not found:
+                    asset_desc_dict.update({db_field_mappings[mapping]: ""})
+
+            csv_row.append(
+                {
+                    **product_sku_details_dict[productSku_assets["productSku"]],
+                    **asset_desc_dict,
+                }
+            )
+            asset_desc_dict = {}
+
+        with open("/tmp/mappings.csv", "w", encoding="utf8", newline="") as output_file:
+            fc = csv.DictWriter(
+                output_file,
+                fieldnames=csv_row[0].keys(),
+            )
+            fc.writeheader()
+            fc.writerows(csv_row)
+        with open('/tmp/mappings.csv') as file:
+            content = file.readlines()
+        return content

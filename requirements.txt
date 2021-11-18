@@ -7,6 +7,7 @@ click==8.0.1
 Flask==2.0.1
 Flask-Cors==3.0.10
 Flask-REST-JSONAPI==0.30.1
+flask-shell-ipython
 Flask-SQLAlchemy==2.4.1
 greenlet==1.1.0
 gunicorn==20.1.0
@@ -17,7 +18,6 @@ Jinja2==3.0.1
 ks-api-client @ git+https://github.com/osparamatrix/ks-orderapi-python.git@6e7a516f8a029393b2cbf0fec7cfeeeefae84cc3
 lxml==4.6.3
 MarkupSafe==2.0.1
-marshmallow==2.18.0
 marshmallow-jsonapi==0.23.2
 mypy-extensions==0.4.3
 nsepy==0.8
