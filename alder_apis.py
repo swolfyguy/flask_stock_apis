@@ -397,9 +397,6 @@ def submit_immediate_order(event, context):
     return common_errors(res)
 
 
-print(submit_immediate_order("",""))
-
-
 def get_order(event, context):
     orderUri = "orderUri"
     orderUri = "08M-LW-1Z7"
@@ -506,7 +503,7 @@ def generate_csv():
     catalogId = "1"
     url = "https://app.giftango.com/programs/programs/6416/catalogs/1"
     headers = {
-        "Authorization": "Bearer dwFWBtfG0jwecoxlU4sRbZwht_IIVbWfwna3qYSVZ5w-1lnW8qqG4DQ_PZWc00YrlRFCR4IVOdOHwsK2fdHT03uM2ATQpB0NWJ9YYn-NdNHLtRkRCYX1BsYnNAApt_bSpf8JPVp2ieyCHdsBmjsSMajdPUiJHQIpTVH6CrNRXiaSkvqisxDN8AwGcO0Hn3vwzWymorhSLIIivGnEagZlpwKOTtNckrUGDhfBGXw0vgJ9SOijYKd2IkubQMB9b_4Zt7fVqxz_yVtSjKwko99qxCHW92-NpSIGmBo3NEatzG-QT8cf0TNGplirr9xw15n2rqBypALOykMhuJmmhVKMbs0AY-IASz6IXkGrzjCRGZaKyKEcs31GWwAXroPUs42UF3voZdsAlPPGFRyaBfjvEK4t6UnNDsjqQ6b7g95jC1JTqA2noV4qqjAxTznFGkxSNnS0VDmGu_AzgiLQYdhT9w629ENXTKzXusYLNcRyyQnOEGExRIAu9f9ZkZ5Uybog"
+        "Authorization": "Bearer qyJV8frxn_G3E4C17quuPyNQQppT6FSbqskosexVjfXQuYaJEFXmGgAcMVQVj1-WiwRxQe181XgMnaHFZzsLfYoZW0VuQlVY_xCLCEJUkql9NsM-sBMPzIwACN_Veck6EodIC4QC1VZidE8z3nIqdhTUCCfy5MGI08oH9BwqlDW0d0dbwL1FkzLvewKHB-RZgL4BN3NYP409A_SM9PIypqi0SrXcxBU-5IQsLe8hk-NneVGyYGrE7t-QFR80ciLxfNnJZs4TugZLapTCsyiT_kT5WfRNJj_yhjYlOY_FSaE498YVyicxvPJo1PBLRpEuaeEXrtqAcJDqOxLIuqtpLlZpFjCI5ZmNiJfloKJxaK9451Mrh2gFXWKxZ_6J4hlu3ljkJks7JMDIpsmITs0WKnWbrppWqbiUAze_CbsfD3h3Q3Jt8Pz-UVBFlUWGH75J1xViH3INic-6YfCm7SwE6ia5Z51jaV6Lxco9BRkJiFJZGsnz8yLgnVyVjO8HixQn"
     }
     catalog_res = requests.get(url=url, headers=headers)
 
@@ -517,7 +514,7 @@ def generate_csv():
 
     if catalog_res.status_code == 200 and catalog_asset_desc_res.status_code == 200:
         # validate response
-        CatalogueSchema().load(catalog_res.json())
+        # CatalogueSchema().load(catalog_res.json())
 
         product_sku_details_dict = {}
         csv_row = []
@@ -581,11 +578,13 @@ def generate_csv():
             fc.writerows(csv_row)
 
 
+print(generate_csv())
 
 import csv
 
 import requests
 from marshmallow import Schema, fields
+
 
 class CatalogueSchema(Schema):
     id = fields.Integer(required=True, nullable=False)
@@ -689,6 +688,6 @@ def lambda_handler(event, context):
             )
             fc.writeheader()
             fc.writerows(csv_row)
-        with open('/tmp/mappings.csv') as file:
+        with open("/tmp/mappings.csv") as file:
             content = file.readlines()
         return content
