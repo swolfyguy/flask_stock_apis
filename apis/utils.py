@@ -288,7 +288,7 @@ def close_all_trades(strategy_id):
     return "All trades closed successfully"
 
 
-def fetch_data(symbol="BANKNIFTY", expiry="09 DEC 2021"):
+def fetch_data(symbol="BANKNIFTY", expiry="16 DEC 2021"):
     if symbol in ["BANKNIFTY", "NIFTY"]:
         atyp = "OPTIDX"
         expiry = expiry
