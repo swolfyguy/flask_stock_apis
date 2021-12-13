@@ -1,20 +1,37 @@
+from dateutil import parser
+import matplotlib.pyplot as plt
+import csv
+from models.nfo import NFO
 
-if __name__ != "__main__":
-    import matplotlib.pyplot as plt
-    import csv
+
+def generate_csv():
+    file = "./nfo_new_2.csv"
+    with open(file, "w") as csvfile:
+        outcsv = csv.writer(
+            csvfile, delimiter=",", quotechar='"', quoting=csv.QUOTE_MINIMAL
+        )
+        header = NFO.__table__.columns.keys()
+        outcsv.writerow(header)
+
+        for record in NFO.query.order_by(NFO.id).all():
+            outcsv.writerow([getattr(record, c) for c in header])
+
+
+if __name__ == "__main__":
+    # uncomment if you want to download db data to csv
+    # generate_csv()
 
     x = []
     y = []
 
     # for row in pd.read_csv('nfo_new.csv', nrows=1000):
     #     pass
-    from dateutil import parser
 
     date_profit_dict = {}
-    with open("nfo_new.csv", "r") as csvfile:
+    with open("nfo_new_2.csv", "r") as csvfile:
         lines = csv.reader(csvfile, delimiter=",")
         for index, row in enumerate(lines):
-            if row[10] == "1":
+            if row[10] == "16":
                 try:
                     current_date_time = parser.parse(row[7])
                     date_ = current_date_time.date()
