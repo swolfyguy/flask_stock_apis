@@ -226,7 +226,7 @@ def get_computed_profit(strategy_id=None):
                 "on_going": {
                     "trades": ongoing_trades,
                     "profit": round(ongoing_profit, 2),
-                    "action": ongoing_action
+                    "action": ongoing_action,
                 },
                 "total": {
                     "trades": ongoing_trades + completed_trades,
