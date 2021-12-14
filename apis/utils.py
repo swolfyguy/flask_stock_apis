@@ -26,7 +26,7 @@ def buy_or_sell_future(self, data: dict):
     if last_trade:
         last_trade.exit_price = ltp
         last_trade.profit = get_profit(last_trade, ltp)
-        last_trade.exited_at = datetime.now()
+        last_trade.exited_at_date_time = datetime.now()
         db.session.commit()
         db.session.refresh(last_trade)
 
@@ -200,7 +200,7 @@ def get_computed_profit(strategy_id=None):
             else:
                 continue
 
-            if nfo.exited_at:
+            if nfo.exited_at_date_time:
                 completed_profit += nfo.profit
                 completed_trades += 1
             else:
