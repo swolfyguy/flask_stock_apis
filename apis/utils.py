@@ -2,7 +2,6 @@ from datetime import datetime
 
 import requests
 
-from apis.constants import strategy_id_name_dct, strategy_symbol_dict
 from extensions import db
 from models.nfo import NFO
 
@@ -26,7 +25,7 @@ def buy_or_sell_future(self, data: dict):
     if last_trade:
         last_trade.exit_price = ltp
         last_trade.profit = get_profit(last_trade, ltp)
-        last_trade.exited_at_date_time = datetime.now()
+        last_trade.exited_at = datetime.now()
         db.session.commit()
         db.session.refresh(last_trade)
 
@@ -163,14 +162,14 @@ def buy_or_sell_option(self, data: dict):
 def get_computed_profit(strategy_id=None):
     if strategy_id:
         constructed_data = get_constructed_data(
-            symbol=strategy_symbol_dict[int(strategy_id)]
+            symbol=NFO.query.filter_by(strategy_id=strategy_id).first().symbol,
         )
     else:
         bank_nifty_constructed_data = get_constructed_data(symbol="BANKNIFTY")
         nifty_constructed_data = get_constructed_data(symbol="NIFTY")
-        axis_bank_constructed_data = get_constructed_data(symbol="AXISBANK")
-        sbi_constructed_data = get_constructed_data(symbol="SBIN")
-        bajajauto_constructed_data = get_constructed_data(symbol="BAJAJ-AUTO")
+        # axis_bank_constructed_data = get_constructed_data(symbol="AXISBANK")
+        # sbi_constructed_data = get_constructed_data(symbol="SBIN")
+        # bajajauto_constructed_data = get_constructed_data(symbol="BAJAJ-AUTO")
 
     data = []
 
@@ -184,6 +183,7 @@ def get_computed_profit(strategy_id=None):
     ):
         ongoing_profit, completed_profit, completed_trades, ongoing_trades = 0, 0, 0, 0
 
+        ongoing_action = None
         for nfo in NFO.query.filter_by(strategy_id=_strategy_id).all():
             if strategy_id:
                 constructed_data = constructed_data
@@ -191,16 +191,16 @@ def get_computed_profit(strategy_id=None):
                 constructed_data = bank_nifty_constructed_data
             elif nfo.symbol == "NIFTY":
                 constructed_data = nifty_constructed_data
-            elif nfo.symbol == "AXISBANK":
-                constructed_data = axis_bank_constructed_data
-            elif nfo.symbol == "SBIN":
-                constructed_data = sbi_constructed_data
-            elif nfo.symbol == "BAJAJ-AUTO":
-                constructed_data = bajajauto_constructed_data
+            # elif nfo.symbol == "AXISBANK":
+            #     constructed_data = axis_bank_constructed_data
+            # elif nfo.symbol == "SBIN":
+            #     constructed_data = sbi_constructed_data
+            # elif nfo.symbol == "BAJAJ-AUTO":
+            #     constructed_data = bajajauto_constructed_data
             else:
                 continue
 
-            if nfo.exited_at_date_time:
+            if nfo.exited_at:
                 completed_profit += nfo.profit
                 completed_trades += 1
             else:
@@ -208,7 +208,7 @@ def get_computed_profit(strategy_id=None):
                     nfo,
                     float(constructed_data[f"{nfo.strike}_{nfo.option_type}"]),
                 )
-
+                ongoing_action = "buy" if nfo.quantity > 0 else "sell"
                 ongoing_trades += 1
 
         total_strategy_profits = completed_profit + ongoing_profit
@@ -218,7 +218,7 @@ def get_computed_profit(strategy_id=None):
         data.append(
             {
                 "id": _strategy_id[0],
-                "name": strategy_id_name_dct[int(_strategy_id[0])],
+                "name": nfo.strategy_name,
                 "completed": {
                     "trades": completed_trades,
                     "profit": round(completed_profit, 2),
@@ -226,6 +226,7 @@ def get_computed_profit(strategy_id=None):
                 "on_going": {
                     "trades": ongoing_trades,
                     "profit": round(ongoing_profit, 2),
+                    "action": ongoing_action
                 },
                 "total": {
                     "trades": ongoing_trades + completed_trades,

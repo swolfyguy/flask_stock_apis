@@ -6,6 +6,7 @@ from extensions import db
 from main import app
 from models.nfo import NFO
 
+
 def generate_csv():
     file = "db_data/14_dec.csv"
     with open(file, "w") as csvfile:
@@ -17,6 +18,7 @@ def generate_csv():
 
         for record in NFO.query.order_by(NFO.id).all():
             outcsv.writerow([getattr(record, c) for c in header])
+
 
 # with app.app_context():
 #     generate_csv()
@@ -60,7 +62,7 @@ if __name__ != "__main__":
 
     # joins the x and y values
     for x, y in zip(x, y):
-        label = round(y/100000, 2)
+        label = round(y / 100000, 2)
 
         plt.annotate(
             label,  # this is the value which we want to label (text)
