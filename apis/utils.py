@@ -289,13 +289,13 @@ def close_all_trades(strategy_id):
     return "All trades closed successfully"
 
 
-def fetch_data(symbol="BANKNIFTY", expiry="06 JAN 2021"):
+def fetch_data(symbol="BANKNIFTY", expiry="06 JAN 2022"):
     if symbol in ["BANKNIFTY", "NIFTY"]:
         atyp = "OPTIDX"
         expiry = expiry
     else:
         atyp = "OPTSTK"
-        expiry = "27 JAN 2021"
+        expiry = "27 JAN 2022"
 
     return requests.post(
         "https://ewmw.edelweiss.in/api/Market/optionchaindetails",
