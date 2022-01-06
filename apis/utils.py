@@ -6,6 +6,18 @@ from extensions import db
 from models.nfo import NFO
 
 
+EXPIRY_LISTS = [
+    "13 JAN 2022",
+    "20 JAN 2022",
+    "27 JAN 2022",
+    "03 FEB 2022",
+    "10 FEB 2022",
+    "17 FEB 2022",
+    "24 FEB 2022",
+    "03 MAR 2022",
+]
+
+
 def get_profit(trade, ltp):
     if trade.quantity > 0:
         b, a = ltp, trade.entry_price
@@ -289,7 +301,7 @@ def close_all_trades(strategy_id):
     return "All trades closed successfully"
 
 
-def fetch_data(symbol="BANKNIFTY", expiry="06 JAN 2022"):
+def fetch_data(symbol="BANKNIFTY", expiry="13 JAN 2022"):
     if symbol in ["BANKNIFTY", "NIFTY"]:
         atyp = "OPTIDX"
         expiry = expiry

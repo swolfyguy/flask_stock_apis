@@ -61,6 +61,52 @@ ClientID = "DpwE2JYRCEdlLjB3T8Yl9A"
 AccountID = "iq0F3ffUQW4uG_SHnIKTeQ"
 
 
+def createKey(event, context):
+    headers = {
+        "Authorization": "Bearer OZslCbLP8kmKvspMshtxNQugYPxgdiZywohPVJpOzvmhm6RenYYo8igdrPzoekCGofggKfrwTXld",
+        "Content-type": "application/json",
+    }
+    uri = f"{FQDN}/v1/clients/{ClientID}/keys"
+
+    # Assuming we have FQDN, ClientIDISO, and ClientIDISO
+    res = requests.post(url=uri, json=event, headers=headers)
+    json_res = res.json()
+
+    if json_res["SC"] == 200 and json_res["EC"] == 00:
+        # client is successfully retrieved","
+        return {
+            "statusCode": res.status_code,
+            "account": json_res,
+            "message": "client is successfully retrieved",
+        }
+
+    return {
+        "statusCode": res.status_code,
+        "message": json_res,
+    }
+
+
+event = {"format": "Raw", "expiration": 365}
+
+# print(createKey(event, ""))
+
+# response
+create_key_response = {
+    "statusCode": 200,
+    "message": {
+        "SC": 200,
+        "EC": "0",
+        "keyID": "A6YlFTQSmALColPNvjbk-g",
+        "keyModulus": "AKqMDO26Eeb_ajZ91v2nEAjdYW1pE8XkTUAqv14hI50miZVQcouLZ8EX6uNZsSdAG1w34Q1_iP0dyO7nMMRy-xErsNJUl_SkOD-ZUDqrDURIONcdV9MpbYMRzpaAp-XbUW_xM0nnSUUlS0MLSBIYBgN8T_4FdcY3EBSUgVvkgGXYProZhP4qI8YXuXd9LIqEpUlRSaKojRzXa7--gc9nL3U5AXw0wK6PSG_EC8iRupt6eEbQmIoHR73CT3ajy8qTWEsBUho4AoRD7ewijqAKzSLNLieds-pEUErglCmcjkI5aKYPD6A34CcLBaAZVjrLCCuHUOiC63hunLuHS1pUif0",
+        "keyExponent": "AQAB",
+        "expiration": "2023-01-04T04:28:56Z",
+        "notices": "**WARNING** Creating too many keys will cause you to be unable to create any keys!",
+    },
+}
+
+another_create_key_response = {'statusCode': 200, 'message': {'SC': 200, 'EC': '0', 'keyID': 'wywHCr1CkEKjuMK2BsjI7g', 'keyModulus': 'AJqzMKyewfuaE5Agki6TRGTTfxoGb8B6VWIN-Byg7GVJCF8-K2t3Mze9om4Dj-Of6dowTaDlAM9cO-jjj3Hth96OKC220l3zrXqc4cCYfWvBxGmVgXpZvgYvweZgiVl9dFMKrbBNsHG9quD8OFQb6puWb9GFc83dFB6gZH7B0w1Qd0-1JzcmR_8MMO4gXBmfC9aE1fe08OCF5cL5p4cdqHzlygSIo2ve3n2uy4LWmR8AWFHshm3c2Cm179KtOYAaZyP2DIefEfuPmZwGulZWjeJ2ddD3r0BkVexCxNWs3u6pyJ1K9mMENmYCSqmz87YLJHn85522zUMIoauK00jBhBc', 'keyExponent': 'AQAB', 'expiration': '2023-01-06T05:56:10Z', 'notices': '**WARNING** Creating too many keys will cause you to be unable to create any keys!'}}
+
+
 def retrieveClient(event, context):
     headers = {
         "Authorization": "Bearer OZslCbLP8kmKvspMshtxNQugYPxgdiZywohPVJpOzvmhm6RenYYo8igdrPzoekCGofggKfrwTXld",
@@ -202,7 +248,7 @@ def create_account(event, context):
     }
     # validate event
     try:
-         accountSchema().load(event)
+        accountSchema().load(event)
     except Exception as e:
         return {
             "error": "validation error",
@@ -466,7 +512,7 @@ account_payload = {
         "phone": {"number": 4159808222},
     },
 }
-print(createTransaction(event=account_payload, context=""))
+# print(createTransaction(event=account_payload, context=""))
 
 # output
 # {
@@ -484,7 +530,6 @@ print(createTransaction(event=account_payload, context=""))
 #     },
 #     "message": "A Transaction is created and processing is completed",
 # }
-
 
 
 blueprint_app_api = "https://app.giftango.com"
@@ -693,3 +738,20 @@ def lambda_handler(event, context):
                 "body": e,
             }
     return common_errors(res)
+
+
+# createKey
+# create account
+# use settlement account for push
+# for pull destinationAccountID is settlement account ID
+# we get reference ID and using it we need to push it
+# use reference ID in correspondingID , sourceAccountID is settlment account ID and destinationAccount would be storecash card
+
+
+# 1. sell 2
+# 2 buy 1
+# 3 buy 16
+# 4 buy 2
+# 26 buy 9
+# 100 sell 2
+# 101 sell 2
