@@ -2,15 +2,15 @@ import time
 from datetime import datetime
 
 import schedule
-
-import logging
-
-log = logging.getLogger(__name__)
-
 from apis.utils import get_computed_profit
 from extensions import db
 from main import app
 from models.till_yesterdays_profit import TillYesterdaysProfit
+
+
+import logging
+
+log = logging.getLogger(__name__)
 
 
 @schedule.repeat(schedule.every().day.at("10:30"))
@@ -21,7 +21,7 @@ def update_daily_profits():
         with app.app_context():
             response = get_computed_profit()
             for strategy_profit in response["data"]:
-                df = DailyProfits(
+                df = TillYesterdaysProfit(
                     strategy_id=strategy_profit["id"],
                     profit=strategy_profit["total"]["profit"],
                     date=todays_date,
