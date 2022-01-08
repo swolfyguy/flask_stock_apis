@@ -106,6 +106,22 @@ create_key_response = {
 
 another_create_key_response = {'statusCode': 200, 'message': {'SC': 200, 'EC': '0', 'keyID': 'wywHCr1CkEKjuMK2BsjI7g', 'keyModulus': 'AJqzMKyewfuaE5Agki6TRGTTfxoGb8B6VWIN-Byg7GVJCF8-K2t3Mze9om4Dj-Of6dowTaDlAM9cO-jjj3Hth96OKC220l3zrXqc4cCYfWvBxGmVgXpZvgYvweZgiVl9dFMKrbBNsHG9quD8OFQb6puWb9GFc83dFB6gZH7B0w1Qd0-1JzcmR_8MMO4gXBmfC9aE1fe08OCF5cL5p4cdqHzlygSIo2ve3n2uy4LWmR8AWFHshm3c2Cm179KtOYAaZyP2DIefEfuPmZwGulZWjeJ2ddD3r0BkVexCxNWs3u6pyJ1K9mMENmYCSqmz87YLJHn85522zUMIoauK00jBhBc', 'keyExponent': 'AQAB', 'expiration': '2023-01-06T05:56:10Z', 'notices': '**WARNING** Creating too many keys will cause you to be unable to create any keys!'}}
 
+new_response = {'SC': 200,
+ 'EC': '0',
+ 'keyID': 'D-EVKrYTyAQhfUGzrb9W_g',
+ 'keyModulus': 'ALPjzrMD_nFB2tklZsInWecTd9uh_p67MXAqoErgzBuZYsxVEhDCiya0Gp310O7B2rE-PESvXvdAi409xngx3h7Bao1n6-Qy8LFRTmfBXTmZnGILxNxEKHf7uRDoRX5wsgkGuf9D9oEdeOGhoQ0z1ZgNBvnu1YDY97Dklzmz3IzanUeW3HRZjlCTF-68ges5O6DLvoRJ1sHZz3b61C763m0wonwwyvSWUFYi9n8xE-78n_Y8df6RcEZKQHfXVQs31koSql0lqkcTrq-lzddA4xnaHrq-w4u5OwsYM5VSCuedqkKtqhJPBFl_Tgq4LcWhOckuOVmAznRpj8eFZPyl_WM',
+ 'keyExponent': 'AQAB',
+ 'expiration': '2023-01-07T16:42:26Z',
+ 'notices': '**WARNING** Creating too many keys will cause you to be unable to create any keys!'}
+
+{'SC': 200,
+ 'EC': '0',
+ 'keyID': 'T-0mCbdSSAZ-V_vstjOTCA',
+ 'keyModulus': 'AIT3sU0lFu9i_eAyuxb0iB7NwdGZR4fFirKSwLRNiHGCLjEwmJBvupAgWHTt8ebW23XZnNHBpCLxjOptE4AMFLx-Fpk47mOdSorcxQHBN6wyqI-hIGEM_HggOtdTKhSWqeDzoagaBLuZVWq3UJBtJzIySfv-yXqjH4zKO60kzfTsseFRQQkDn59qVQ9QgWGvSbj0B_ccIUqHVd1ATIYNJ79VAT9phyVMZIG9yt3xLeyK0GjTDlUafuM7hmPrIYawNyIACuMjuCT-NaxTIuLA-6Mk0c-O-nE5VikP0cAp7lN7o9v7G8z9s5WCxKHOQV_4T1ARwuCuN6puWH1uHy9oZ3c',
+ 'keyExponent': 'AQAB',
+ 'expiration': '2023-01-07T17:40:16Z',
+ 'notices': '**WARNING** Creating too many keys will cause you to be unable to create any keys!'}
+
 
 def retrieveClient(event, context):
     headers = {
@@ -746,12 +762,3 @@ def lambda_handler(event, context):
 # for pull destinationAccountID is settlement account ID
 # we get reference ID and using it we need to push it
 # use reference ID in correspondingID , sourceAccountID is settlment account ID and destinationAccount would be storecash card
-
-
-# 1. sell 2
-# 2 buy 1
-# 3 buy 16
-# 4 buy 2
-# 26 buy 9
-# 100 sell 2
-# 101 sell 2

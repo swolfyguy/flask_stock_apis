@@ -24,7 +24,7 @@ def get_profit(trade, ltp):
     else:
         b, a = trade.entry_price, ltp
 
-    return (b - a) * trade.quantity
+    return (b - a) * trade.quantity - 30
 
 
 def buy_or_sell_future(self, data: dict):
@@ -301,7 +301,15 @@ def close_all_trades(strategy_id):
     return "All trades closed successfully"
 
 
-def fetch_data(symbol="BANKNIFTY", expiry="13 JAN 2022"):
+def fetch_data(symbol="BANKNIFTY", expiry=None):
+    if not expiry:
+        today_date = datetime.today().date()
+        for expiry_str in EXPIRY_LISTS:
+            expiry_date = datetime.strptime(expiry_str, "%d %b %Y").date()
+            if expiry_date >= today_date:
+                expiry = expiry_date
+                break
+
     if symbol in ["BANKNIFTY", "NIFTY"]:
         atyp = "OPTIDX"
         expiry = expiry

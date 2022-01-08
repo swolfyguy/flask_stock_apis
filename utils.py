@@ -88,3 +88,12 @@ def delete_rows():
         delete_q = NFO.__table__.delete().where(NFO.exited_at != None)
         db.session.execute(delete_q)
         db.session.commit()
+
+
+def update_profit():
+    with app.app_context():
+        update_ = NFO.__table__.update().where(NFO.exited_at != None).values(profit=NFO.profit - 30)
+        db.session.execute(update_)
+        db.session.commit()
+
+update_profit()
