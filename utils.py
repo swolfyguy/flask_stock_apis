@@ -5,6 +5,7 @@ import csv
 from extensions import db
 from main import app
 from models.nfo import NFO
+from models.till_yesterdays_profit import TillYesterdaysProfit
 
 
 def generate_csv():
@@ -101,4 +102,10 @@ def update_profit():
         db.session.commit()
 
 
-update_profit()
+def add_column():
+    col = db.Column('date', db.Date)
+    column_name = col.compile(dialect=db.engine.dialect)
+    column_type = col.type.compile(db.engine.dialect)
+    table_name = TillYesterdaysProfit.__tablename__
+    db.engine.execute('ALTER TABLE %s ADD COLUMN %s %s' % (table_name, column_name, column_type))
+    db.session.commit()

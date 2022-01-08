@@ -13,3 +13,4 @@ class TillYesterdaysProfitSchema(Schema):
     id = fields.Integer(as_string=True, dump_only=True)
     profit = fields.Float()
     strategy_id = fields.Integer()
+    date = fields.Date()
