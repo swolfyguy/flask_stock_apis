@@ -3,6 +3,10 @@ from datetime import datetime
 
 import schedule
 
+import logging
+
+log = logging.getLogger(__name__)
+
 from apis.utils import get_computed_profit
 from extensions import db
 from main import app
@@ -32,9 +36,9 @@ from models.daily_profits import DailyProfits
 
 @schedule.repeat(schedule.every(3).seconds)
 def log_time():
-    print("running jobs to log time")
+    log.info("running jobs to log time")
     current_time = datetime.now()
-    print(f"running jobs to log time: {current_time}")
+    log.info(f"running jobs to log time: {current_time}")
 
 
 while True:
