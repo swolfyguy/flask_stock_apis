@@ -5,10 +5,10 @@ from marshmallow_jsonapi.flask import Schema
 
 class TillYesterdaysProfitSchema(Schema):
     class Meta:
-        type_ = "daily_profits"
-        self_view = "daily_profits_detail"
+        type_ = "till_yestardays_profit"
+        self_view = "till_yestardays_profit_detail"
         self_view_kwargs = {"id": "<id>"}
-        self_view_many = "daily_profits_list"
+        self_view_many = "till_yestardays_profit_list"
 
     id = fields.Integer(as_string=True, dump_only=True)
     profit = fields.Float()

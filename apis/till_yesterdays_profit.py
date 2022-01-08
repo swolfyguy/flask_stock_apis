@@ -8,11 +8,13 @@ from schema.till_yesterdays_profit import TillYesterdaysProfitSchema
 
 class TillYesterdaysProfitList(ResourceList):
     methods = ["GET"]
+
     schema = TillYesterdaysProfitSchema
     data_layer = {"session": db.session, "model": TillYesterdaysProfit}
 
 
 class TillYesterdaysProfitDetail(ResourceDetail):
-    schema = TillYesterdaysProfitSchema
     methods = ["GET"]
+
+    schema = TillYesterdaysProfitSchema
     data_layer = {"session": db.session, "model": TillYesterdaysProfit}
