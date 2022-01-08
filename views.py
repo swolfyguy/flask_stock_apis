@@ -99,8 +99,8 @@ def register_json_routes(app):
     api.route(NFOList, "nfo_list", "/api/nfo")
     api.route(NFODetail, "nfo_detail", "/api/nfo/<int:id>")
 
-    api.route(TillYesterdaysProfitList, "till_yestardays_profit_list", "/api/till_yesterdays_profit")
-    api.route(TillYesterdaysProfitDetail, "till_yestardays_profit_detail", "/api/till_yesterdays_profit/<int:id>")
+    api.route(TillYesterdaysProfitList, "till_yesterdays_profit_list", "/api/till_yesterdays_profit")
+    api.route(TillYesterdaysProfitDetail, "till_yesterdays_profit_detail", "/api/till_yesterdays_profit/<int:id>")
 
     api.route(OptionChainList, "option_chain_list", "/api/option_chain")
     api.route(OptionChainDetail, "option_chain_detail", "/api/nfo/<int:id>")
