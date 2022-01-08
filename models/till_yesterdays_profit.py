@@ -2,8 +2,8 @@
 from extensions import db
 
 
-class DailyProfits(db.Model):
-    __tablename__ = "daily_profits"
+class TillYesterdaysProfit(db.Model):
+    __tablename__ = "till_yestardays_profit"
 
     id = db.Column(db.Integer, primary_key=True)
     profit = db.Column(db.Float, nullable=True)

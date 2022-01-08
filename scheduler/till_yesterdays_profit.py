@@ -10,7 +10,7 @@ log = logging.getLogger(__name__)
 from apis.utils import get_computed_profit
 from extensions import db
 from main import app
-from models.daily_profits import DailyProfits
+from models.till_yesterdays_profit import TillYesterdaysProfit
 
 #
 # @schedule.repeat(schedule.every().day.at("10:30"))

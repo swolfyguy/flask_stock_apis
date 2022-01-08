@@ -3,7 +3,7 @@ from marshmallow_jsonapi import fields
 from marshmallow_jsonapi.flask import Schema
 
 
-class DailyProfitsSchema(Schema):
+class TillYesterdaysProfitSchema(Schema):
     class Meta:
         type_ = "daily_profits"
         self_view = "daily_profits_detail"

@@ -6,7 +6,7 @@ import schedule
 from flask import jsonify
 from flask_rest_jsonapi import Api
 
-from apis.daily_profits import DailyProfitsList, DailyProfitsDetail
+from apis.till_yesterdays_profit import TillYesterdaysProfitList, TillYesterdaysProfitDetail
 from apis.nfo import NFODetail
 from apis.nfo import NFOList
 from apis.option_chain import OptionChainList, OptionChainDetail
@@ -99,8 +99,8 @@ def register_json_routes(app):
     api.route(NFOList, "nfo_list", "/api/nfo")
     api.route(NFODetail, "nfo_detail", "/api/nfo/<int:id>")
 
-    api.route(DailyProfitsList, "daily_profits_list", "/api/daily_profits")
-    api.route(DailyProfitsDetail, "daily_profits_detail", "/api/daily_profits/<int:id>")
+    api.route(TillYesterdaysProfitList, "daily_profits_list", "/api/till_yestardays_profit")
+    api.route(TillYesterdaysProfitDetail, "daily_profits_detail", "/api/till_yestardays_profit/<int:id>")
 
     api.route(OptionChainList, "option_chain_list", "/api/option_chain")
     api.route(OptionChainDetail, "option_chain_detail", "/api/nfo/<int:id>")
