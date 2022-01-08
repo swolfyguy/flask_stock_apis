@@ -416,6 +416,7 @@ def fetch_data(symbol="BANKNIFTY", expiry=None):
                     break
     else:
         atyp = "OPTSTK"
+        # TODO add logic here as well
         expiry = "27 JAN 2022"
 
     return requests.post(
