@@ -2,8 +2,10 @@ from dateutil import parser
 import matplotlib.pyplot as plt
 import csv
 
+from apis.utils import get_computed_profit
 from extensions import db
 from main import app
+from models.completed_profit import CompletedProfit
 from models.nfo import NFO
 from models.till_yesterdays_profit import TillYesterdaysProfit
 
@@ -109,3 +111,22 @@ def add_column():
     table_name = TillYesterdaysProfit.__tablename__
     db.engine.execute('ALTER TABLE %s ADD COLUMN %s %s' % (table_name, column_name, column_type))
     db.session.commit()
+
+
+def update_completed_profit():
+    with app.app_context():
+        response = get_computed_profit()
+
+        for strategy_profit in response["data"]:
+            df = CompletedProfit(
+                strategy_id=strategy_profit["id"],
+                profit=strategy_profit["completed"]["profit"],
+            )
+            db.session.add(df)
+        try:
+            db.session.commit()
+        except Exception as e:
+            print(f"Error occurred while updating CompletedProfit profit: {e}")
+            db.session.rollback()
+
+update_completed_profit()
