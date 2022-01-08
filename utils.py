@@ -2,7 +2,7 @@ from dateutil import parser
 import matplotlib.pyplot as plt
 import csv
 
-from apis.utils import get_computed_profit
+from apis.utils import get_computed_profit, get_computed_profit_without_fetching_completed_profit
 from extensions import db
 from main import app
 from models.completed_profit import CompletedProfit
@@ -105,24 +105,28 @@ def update_profit():
 
 
 def add_column():
-    col = db.Column('date', db.Date)
-    column_name = col.compile(dialect=db.engine.dialect)
-    column_type = col.type.compile(db.engine.dialect)
-    table_name = TillYesterdaysProfit.__tablename__
-    db.engine.execute('ALTER TABLE %s ADD COLUMN %s %s' % (table_name, column_name, column_type))
-    db.session.commit()
+    with app.app_context():
+        col = db.Column('trades', db.Integer)
+        column_name = col.compile(dialect=db.engine.dialect)
+        column_type = col.type.compile(db.engine.dialect)
+        table_name = CompletedProfit.__tablename__
+        db.engine.execute('ALTER TABLE %s ADD COLUMN %s %s' % (table_name, column_name, column_type))
+        db.session.commit()
 
 
 def update_completed_profit():
     with app.app_context():
-        response = get_computed_profit()
+        response = get_computed_profit_without_fetching_completed_profit()
 
         for strategy_profit in response["data"]:
+            strategy_id = strategy_profit["id"]
             df = CompletedProfit(
-                strategy_id=strategy_profit["id"],
+                strategy_id=strategy_id,
                 profit=strategy_profit["completed"]["profit"],
+                trades=strategy_profit["completed"]["trades"]
             )
             db.session.add(df)
+            print(f"going to update completed profit: {strategy_id}")
         try:
             db.session.commit()
         except Exception as e:
