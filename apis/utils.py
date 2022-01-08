@@ -405,17 +405,15 @@ def close_all_trades(strategy_id):
 
 
 def fetch_data(symbol="BANKNIFTY", expiry=None):
-    if not expiry:
-        today_date = datetime.today().date()
-        for expiry_str in EXPIRY_LISTS:
-            expiry_date = datetime.strptime(expiry_str, "%d %b %Y").date()
-            if expiry_date >= today_date:
-                expiry = expiry_date
-                break
-
     if symbol in ["BANKNIFTY", "NIFTY"]:
         atyp = "OPTIDX"
-        expiry = expiry
+        if not expiry:
+            today_date = datetime.today().date()
+            for expiry_str in EXPIRY_LISTS:
+                expiry_date = datetime.strptime(expiry_str, "%d %b %Y").date()
+                if expiry_date >= today_date:
+                    expiry = expiry_str
+                    break
     else:
         atyp = "OPTSTK"
         expiry = "27 JAN 2022"
