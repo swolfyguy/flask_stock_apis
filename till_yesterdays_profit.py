@@ -1,21 +1,24 @@
-import time
 from datetime import datetime
 
-import schedule
+import tzlocal
+from apscheduler.schedulers.background import BackgroundScheduler
 from apis.utils import get_computed_profit
 from extensions import db
 from main import app
 from models.till_yesterdays_profit import TillYesterdaysProfit
-
-
 import logging
 
 log = logging.getLogger(__name__)
+import pytz
+
+from apscheduler.schedulers.blocking import BlockingScheduler
+
+scheduler = BlockingScheduler()
 
 
-@schedule.repeat(schedule.every().day.at("10:30"))
+@scheduler.scheduled_job("cron", day_of_week="mon-fri", hour=10, minute=31)
 def update_daily_profits():
-    print("running jobs to update profit every weekday")
+    print("running jobs to update profit weekday")
     todays_date = datetime.today().date()
     if todays_date.weekday() < 5:
         with app.app_context():
@@ -33,6 +36,8 @@ def update_daily_profits():
                 print(f"Error occurred while updating {todays_date} profit: {e}")
                 db.session.rollback()
 
+
+scheduler.start()
 
 # @schedule.repeat(schedule.every(3).seconds)
 # def log_time():
@@ -53,8 +58,3 @@ def update_daily_profits():
 #             except Exception as e:
 #                 print(f"Error occurred while updating {todays_date} profit: {e}")
 #                 db.session.rollback()
-
-
-while True:
-    schedule.run_pending()
-    time.sleep(1)
