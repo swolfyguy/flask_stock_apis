@@ -13,10 +13,10 @@ import pytz
 
 from apscheduler.schedulers.blocking import BlockingScheduler
 
-scheduler = BlockingScheduler()
+scheduler = BackgroundScheduler()
 
 
-@scheduler.scheduled_job("cron", day_of_week="mon-fri", hour=10, minute=31)
+@scheduler.scheduled_job("cron", day_of_week="mon-fri", hour=10, minute=42)
 def update_daily_profits():
     print("running jobs to update profit weekday")
     todays_date = datetime.today().date()
@@ -32,10 +32,12 @@ def update_daily_profits():
                 db.session.add(df)
             try:
                 db.session.commit()
+                print("till yesterday profit upated")
             except Exception as e:
                 print(f"Error occurred while updating {todays_date} profit: {e}")
                 db.session.rollback()
 
+# update_daily_profits()
 
 scheduler.start()
 

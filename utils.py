@@ -27,7 +27,7 @@ def generate_csv():
 #     generate_csv()
 
 
-if __name__ != "__main__":
+if __name__ == "__main__":
     ## uncomment if you want to download db data to csv
     # with app.app_context():
     #     generate_csv()
@@ -42,7 +42,8 @@ if __name__ != "__main__":
     with open("nfo_new_2.csv", "r") as csvfile:
         lines = csv.reader(csvfile, delimiter=",")
         for index, row in enumerate(lines):
-            if row[10] == "6":
+            # strategy_id
+            if row[10] == "4":
                 try:
                     exited_at_date_time = parser.parse(row[7])
                     date_ = exited_at_date_time.date()
@@ -133,4 +134,4 @@ def update_completed_profit():
             print(f"Error occurred while updating CompletedProfit profit: {e}")
             db.session.rollback()
 
-update_completed_profit()
+# update_completed_profit()
