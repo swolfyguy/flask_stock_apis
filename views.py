@@ -2,7 +2,6 @@
 import datetime
 import time
 
-import schedule
 from flask import jsonify
 from flask_rest_jsonapi import Api
 
