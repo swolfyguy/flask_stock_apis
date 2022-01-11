@@ -118,6 +118,9 @@ def buy_or_sell_option(self, data: dict):
             if cp:
                 cp.profit += total_profit
                 cp.trades += len(on_going_trades)
+            else:
+                cp = CompletedProfit(profit=total_profit, strategy_id=data["strategy_id"], trades=len(on_going_trades))
+                db.session.add(cp)
 
             db.session.bulk_update_mappings(NFO, mappings)
             db.session.commit()
