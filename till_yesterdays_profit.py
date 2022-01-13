@@ -16,8 +16,8 @@ from apscheduler.schedulers.blocking import BlockingScheduler
 scheduler = BackgroundScheduler()
 
 
-@scheduler.scheduled_job("cron", day_of_week="mon-fri", hour=10, minute=42)
-def update_daily_profits():
+# @scheduler.scheduled_job("cron", day_of_week="mon-fri", hour=10, minute=42)
+def update_till_yesterdays_profits():
     print("running jobs to update profit weekday")
     todays_date = datetime.today().date()
     if todays_date.weekday() < 5:
@@ -30,16 +30,17 @@ def update_daily_profits():
                     date=todays_date,
                 )
                 db.session.add(df)
+
             try:
                 db.session.commit()
-                print("till yesterday profit upated")
+                print("till yesterday profit updated")
             except Exception as e:
                 print(f"Error occurred while updating {todays_date} profit: {e}")
                 db.session.rollback()
 
-# update_daily_profits()
+update_till_yesterdays_profits()
 
-scheduler.start()
+# scheduler.start()
 
 # @schedule.repeat(schedule.every(3).seconds)
 # def log_time():

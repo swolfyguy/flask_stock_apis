@@ -27,6 +27,7 @@ def get_profit(trade, ltp):
     else:
         b, a = trade.entry_price, ltp
 
+    # TODO charges to be deducted should be dynamic because in future apart from Bank and Nifty we will have others F&O
     return (b - a) * trade.quantity - 30
 
 
@@ -304,6 +305,8 @@ def get_computed_profit(strategy_id=None):
         ongoing_profit, completed_profit, completed_trades, ongoing_trades = 0, 0, 0, 0
 
         query = NFO.query.filter_by(exited_at=None, strategy_id=_strategy_id)
+        nfo = None
+        ongoing_action = None
         for nfo in query.all():
             if strategy_id:
                 constructed_data = constructed_data
@@ -329,6 +332,10 @@ def get_computed_profit(strategy_id=None):
         total_strategy_profits = ongoing_profit + completed_profit
 
         total_ongoing_profits += ongoing_profit
+
+        if not nfo:
+            nfo = NFO.query.filter_by(strategy_id=_strategy_id).first()
+
         data.append(
             {
                 "id": _strategy_id,
@@ -364,7 +371,7 @@ def get_computed_profit(strategy_id=None):
     return result
 
 
-def close_all_trades(strategy_id):
+def close_all_trades(strategy_id=None):
     bank_nifty_constructed_data = get_constructed_data(symbol="BANKNIFTY")
     nifty_constructed_data = get_constructed_data(symbol="NIFTY")
     axis_bank_constructed_data = get_constructed_data(symbol="AXISBANK")
@@ -385,20 +392,21 @@ def close_all_trades(strategy_id):
                 constructed_data = bank_nifty_constructed_data
             elif nfo.symbol == "NIFTY":
                 constructed_data = nifty_constructed_data
-            elif nfo.symbol == "AXISBANK":
-                constructed_data = axis_bank_constructed_data
-            elif nfo.symbol == "SBIN":
-                constructed_data = sbi_constructed_data
-            elif nfo.symbol == "BAJAJ-AUTO":
-                constructed_data = bajajauto_constructed_data
+            # elif nfo.symbol == "AXISBANK":
+            #     constructed_data = axis_bank_constructed_data
+            # elif nfo.symbol == "SBIN":
+            #     constructed_data = sbi_constructed_data
+            # elif nfo.symbol == "BAJAJ-AUTO":
+            #     constructed_data = bajajauto_constructed_data
             else:
                 continue
 
+            ltp = float(constructed_data[f"{nfo.strike}_{nfo.option_type}"]),
             profit = get_profit(
-                nfo,
-                float(constructed_data[f"{nfo.strike}_{nfo.option_type}"]),
+                nfo,ltp
+
             )
-            update_mapping = {"id": nfo.id, "profit": profit, "exited_at": exited_at}
+            update_mapping = {"id": nfo.id, "profit": profit, "exited_at": exited_at, "exit_price": ltp}
             update_mappings.append(update_mapping)
 
     db.session.bulk_update_mappings(NFO, update_mappings)
@@ -408,6 +416,7 @@ def close_all_trades(strategy_id):
 
 
 def fetch_data(symbol="BANKNIFTY", expiry=None):
+    expiry = "20 JAN 2022",
     if symbol in ["BANKNIFTY", "NIFTY"]:
         atyp = "OPTIDX"
         if not expiry:

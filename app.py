@@ -2,6 +2,7 @@
 from flask import Flask
 
 from extensions import register_extensions
+from extensions.schedular.initialize import register_scheduler
 from views import register_base_routes
 from views import register_json_routes
 from flask_cors import CORS
@@ -13,6 +14,7 @@ def _create_app():
     app = Flask(__name__, instance_relative_config=False)
     CORS(app)
     register_extensions(app)
+    register_scheduler(app)
     return app
 
 
