@@ -416,7 +416,6 @@ def close_all_trades(strategy_id=None):
 
 
 def fetch_data(symbol="BANKNIFTY", expiry=None):
-    expiry = "20 JAN 2022",
     if symbol in ["BANKNIFTY", "NIFTY"]:
         atyp = "OPTIDX"
         if not expiry:
