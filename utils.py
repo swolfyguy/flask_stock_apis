@@ -7,7 +7,8 @@ import csv
 from apis.utils import (
     get_computed_profit,
     get_computed_profit_without_fetching_completed_profit,
-    fetch_data, get_constructed_data,
+    fetch_data,
+    get_constructed_data,
 )
 from extensions import db
 from main import app
@@ -93,17 +94,6 @@ if __name__ != "__main__":
     plt.show()
 
 
-def update_profit():
-    with app.app_context():
-        update_ = (
-            NFO.__table__.update()
-            .where(NFO.exited_at != None)
-            .values(profit=NFO.profit - 30)
-        )
-        db.session.execute(update_)
-        db.session.commit()
-
-
 def add_column():
     with app.app_context():
         col = db.Column("trades", db.Integer)
@@ -158,22 +148,24 @@ def undo_last_action():
 
 
 def take_next_expiry_trades():
-    last_action = dict([
-        (3, -25),
-        (2, 100),
-        (4, 100),
-        (5, 25),
-        (6, 100),
-        (7, 25),
-        (8, 25),
-        (9, 100),
-        (10, 100),
-        (11, 100),
-        (26, 25),
-        (100, -25),
-        (101, 100),
-        (1, -25),
-    ])
+    last_action = dict(
+        [
+            (3, -25),
+            (2, 100),
+            (4, 100),
+            (5, 25),
+            (6, 100),
+            (7, 25),
+            (8, 25),
+            (9, 100),
+            (10, 100),
+            (11, 100),
+            (26, 25),
+            (100, -25),
+            (101, 100),
+            (1, -25),
+        ]
+    )
 
     ongoing_trades = {
         100: 75,
@@ -208,26 +200,69 @@ def take_next_expiry_trades():
             entry_price, strike = 0, 0
             for key, value in constructed_data.items():
                 if (
-                        option_type in key
-                        and -50 < (float(value) - float(strike_price)) < 100
+                    option_type in key
+                    and -50 < (float(value) - float(strike_price)) < 100
                 ):
                     entry_price, strike = value, key.split("_")[0]
                     break
 
             placed_at = datetime.datetime.now()
             new_nfo = NFO(
-                entry_price = entry_price,
-                strike = strike,
+                entry_price=entry_price,
+                strike=strike,
                 placed_at=placed_at,
-                quantity=ongoing_trades[strategy_id],
+                quantity=ongoing_trades[strategy_id] * 25
+                if nfo.symbol == "BANKNIFTY"
+                else 50,
                 nfo_type="option",
-                option_type = option_type,
+                option_type=option_type,
                 strategy_id=strategy_id,
                 strategy_name=nfo.strategy_name,
-                symbol=nfo.symbol
+                symbol=nfo.symbol,
             )
             db.session.add(new_nfo)
 
         db.session.commit()
 
+
+def difference_call():
+    with app.app_context():
+        action = "buy"
+        for nfo in (
+            NFO.query.filter(
+                NFO.strategy_id == 4, NFO.placed_at >= datetime.datetime(2022, 1, 11)
+            )
+            .order_by(NFO.placed_at)
+            .all()
+        ):
+            on_going_action = "buy" if nfo.quantity > 0 else "sell"
+            if action != on_going_action:
+                print(
+                    on_going_action,
+                    nfo.placed_at + datetime.timedelta(hours=5, minutes=30),
+                )
+                action = on_going_action
+
+difference_call()
+
+
 # take_next_expiry_trades()
+
+# RIGHT ON SPOT with tradingview in terms of call
+# BankNifty Every Candle 87,
+# Nifty Every Candle 21
+
+# BankNifty Affordable 27 , one candle behind  Strategy_id = 7
+# BankNifty Testing Affordable 14 , sometimes one candle sometimes its 3 candles behind   Strategy_id = 8
+# BankNifty Single Call 28, Right on spot only one candle behind
+# BankNifty 41 is also on spot
+# BankNifty 26 is also not on spot TODO check for few days after 14 Jan
+
+
+
+# Nifty Single Call 3 and 21 results are different.... TODO check for 21 again after 14 Jan
+# Nifty Affordable 9, one candle behind strategy_id=9
+# Nifty Testing Affordable 3, RESULTS DO NOT MATCH TradingView
+# Nifty 18 is RIGHT ON SPOT
+
+
