@@ -26,6 +26,11 @@ strategy_symbol_dict = {
     13: "BAJAJ-AUTO",
 }
 
+
+class TRADES:
+    BANKNIFTY = "BANKNIFTY"
+    NIFTY = "NIFTY"
+
 # TODO do not remove this unless you are confident that above code will work for atleast 15 days
 # expiry = "30SEP2021"
 # url = f"https://vbiz.in/optionchain/foc.php?symbol={symbol}&expiry={expiry}"

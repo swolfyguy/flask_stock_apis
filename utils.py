@@ -18,7 +18,7 @@ from models.till_yesterdays_profit import TillYesterdaysProfit
 
 
 def generate_csv():
-    file = "db_data/11_jan.csv"
+    file = "db_data/31_jan.csv"
     with open(file, "w") as csvfile:
         outcsv = csv.writer(
             csvfile, delimiter=",", quotechar='"', quoting=csv.QUOTE_MINIMAL
@@ -26,7 +26,7 @@ def generate_csv():
         header = NFO.__table__.columns.keys()
         outcsv.writerow(header)
 
-        for record in NFO.query.order_by(NFO.id).all():
+        for record in NFO.query.filter(NFO.exited_at!=None).order_by(NFO.id).all():
             outcsv.writerow([getattr(record, c) for c in header])
 
 
@@ -46,11 +46,11 @@ if __name__ != "__main__":
     #     pass
 
     date_profit_dict = {}
-    with open("db_data/11_jan.csv", "r") as csvfile:
+    with open("db_data/24_jan.csv", "r") as csvfile:
         lines = csv.reader(csvfile, delimiter=",")
         for index, row in enumerate(lines):
             # strategy_id
-            if row[10] == "101":
+            if row[10] == "5":
                 try:
                     exited_at_date_time = parser.parse(row[7])
                     date_ = exited_at_date_time.date()
@@ -96,46 +96,26 @@ if __name__ != "__main__":
 
 def add_column():
     with app.app_context():
-        col = db.Column("trades", db.Integer)
+        col = db.Column("expiry", db.Date)
         column_name = col.compile(dialect=db.engine.dialect)
         column_type = col.type.compile(db.engine.dialect)
-        table_name = CompletedProfit.__tablename__
+        table_name = NFO.__tablename__
         db.engine.execute(
             "ALTER TABLE %s ADD COLUMN %s %s" % (table_name, column_name, column_type)
         )
         db.session.commit()
 
 
-def update_completed_profit():
-    with app.app_context():
-        response = get_computed_profit_without_fetching_completed_profit()
-
-        for strategy_profit in response["data"]:
-            strategy_id = strategy_profit["id"]
-            df = CompletedProfit(
-                strategy_id=strategy_id,
-                profit=strategy_profit["completed"]["profit"],
-                trades=strategy_profit["completed"]["trades"],
-            )
-            db.session.add(df)
-            print(f"going to update completed profit: {strategy_id}")
-        try:
-            db.session.commit()
-        except Exception as e:
-            print(f"Error occurred while updating CompletedProfit profit: {e}")
-            db.session.rollback()
+# add_column()
 
 
-# update_completed_profit()
+# def delete_rows():
+#     with app.app_context():
+#         delete_q = NFO.__table__.delete().where(NFO.exited_at != None)
+#         db.session.execute(delete_q)
+#         db.session.commit()
+#
 
-
-def delete_rows():
-    with app.app_context():
-        delete_q = CompletedProfit.__table__.delete().where(
-            CompletedProfit.strategy_id.in_([5, 6])
-        )
-        db.session.execute(delete_q)
-        db.session.commit()
 
 
 def undo_last_action():
@@ -200,8 +180,8 @@ def take_next_expiry_trades():
             entry_price, strike = 0, 0
             for key, value in constructed_data.items():
                 if (
-                    option_type in key
-                    and -50 < (float(value) - float(strike_price)) < 100
+                        option_type in key
+                        and -50 < (float(value) - float(strike_price)) < 100
                 ):
                     entry_price, strike = value, key.split("_")[0]
                     break
@@ -229,11 +209,11 @@ def difference_call():
     with app.app_context():
         action = "buy"
         for nfo in (
-            NFO.query.filter(
-                NFO.strategy_id == 4, NFO.placed_at >= datetime.datetime(2022, 1, 11)
-            )
-            .order_by(NFO.placed_at)
-            .all()
+                NFO.query.filter(
+                    NFO.strategy_id == 11, NFO.placed_at >= datetime.datetime(2022, 1, 13)
+                )
+                        .order_by(NFO.placed_at)
+                        .all()
         ):
             on_going_action = "buy" if nfo.quantity > 0 else "sell"
             if action != on_going_action:
@@ -243,8 +223,68 @@ def difference_call():
                 )
                 action = on_going_action
 
-difference_call()
 
+# difference_call()
+
+
+def compare_db_with_tdview_profit():
+    csv_lookup = {}
+    with open("trading_view_chart_calls/banknifty_single_call_28.csv", "r") as csvfile:
+        lines = csv.reader(csvfile, delimiter=",")
+        for index, row in enumerate(lines):
+            if index > 0:
+                if row[0] not in csv_lookup:
+                    csv_lookup[row[0]] = [row[3], row[6]]
+                else:
+                    if row[3] != "":
+                        csv_lookup[row[0]].append(row[3])
+                    else:
+                        del csv_lookup[row[0]]
+
+    datetime_format = "%Y-%m-%d %H:%M"
+    final_csv_lookup = {
+        datetime.datetime.strptime(value[0], datetime_format): (
+            datetime.datetime.strptime(value[2], datetime_format),
+            value[1],
+        )
+        for key, value in csv_lookup.items()
+    }
+
+    # print(final_csv_lookup)
+
+    profit = []
+    unrealized_profit = 0
+    with app.app_context():
+        for nfo in (
+                NFO.query.filter(
+                    NFO.strategy_id == 5, NFO.placed_at >= datetime.datetime(2022, 1, 4), NFO.exited_at != None
+                )
+                        .order_by(NFO.placed_at)
+                        .all()
+        ):
+            hour = nfo.placed_at.hour
+            minute = nfo.placed_at.minute
+            iso_placed_at_datetime = nfo.placed_at.replace(second=0, microsecond=0, tzinfo=None)
+            iso_exited_at_datetime = nfo.exited_at.replace(second=0, microsecond=0, tzinfo=None)
+
+            ist_placed_at_datetime = iso_placed_at_datetime + datetime.timedelta(hours=5, minutes=30)
+            ist_exited_at_datetime = iso_exited_at_datetime + datetime.timedelta(hours=5, minutes=30)
+
+            if ist_placed_at_datetime in final_csv_lookup:
+                if ist_placed_at_datetime.weekday() != 4:
+
+                    _profit = float(final_csv_lookup[ist_placed_at_datetime][1]) - (nfo.profit)
+                    if final_csv_lookup[ist_placed_at_datetime][0] == ist_exited_at_datetime:
+                        profit.append(_profit)
+                    else:
+                        unrealized_profit += _profit
+
+        profit.sort()
+        # print(f"final profit: {profit}")
+        print(f"unrealized_profit profit: {unrealized_profit}")
+
+
+# compare_db_with_tdview_profit()
 
 # take_next_expiry_trades()
 
@@ -256,8 +296,7 @@ difference_call()
 # BankNifty Testing Affordable 14 , sometimes one candle sometimes its 3 candles behind   Strategy_id = 8
 # BankNifty Single Call 28, Right on spot only one candle behind
 # BankNifty 41 is also on spot
-# BankNifty 26 is also not on spot TODO check for few days after 14 Jan
-
+# BankNifty 26 is also on spot, it skips one pair of buy and sell sometimes
 
 
 # Nifty Single Call 3 and 21 results are different.... TODO check for 21 again after 14 Jan
@@ -266,3 +305,23 @@ difference_call()
 # Nifty 18 is RIGHT ON SPOT
 
 
+#
+#
+# def update_completed_profit():
+#     with app.app_context():
+#         response = get_computed_profit_without_fetching_completed_profit()
+#
+#         for strategy_profit in response["data"]:
+#             strategy_id = strategy_profit["id"]
+#             df = CompletedProfit(
+#                 strategy_id=strategy_id,
+#                 profit=strategy_profit["completed"]["profit"],
+#                 trades=strategy_profit["completed"]["trades"],
+#             )
+#             db.session.add(df)
+#             print(f"going to update completed profit: {strategy_id}")
+#         try:
+#             db.session.commit()
+#         except Exception as e:
+#             print(f"Error occurred while updating CompletedProfit profit: {e}")
+#             db.session.rollback()

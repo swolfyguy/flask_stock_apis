@@ -1,24 +1,39 @@
+import copy
 from datetime import datetime
 
 import requests
 import sqlalchemy
 
 from sqlalchemy.util._collections import _LW
+
+from apis.constants import TRADES
 from extensions import db
 from models.completed_profit import CompletedProfit
 from models.nfo import NFO
 
 
 EXPIRY_LISTS = [
-    "13 JAN 2022",
-    "20 JAN 2022",
-    "27 JAN 2022",
     "03 FEB 2022",
     "10 FEB 2022",
     "17 FEB 2022",
     "24 FEB 2022",
     "03 MAR 2022",
+    "10 MAR 2022",
+    "17 MAR 2022",
+    "24 MAR 2022",
+    "31 MAR 2022",
+    "28 APR 2022",
 ]
+
+
+def get_current_expiry():
+    expiry = None
+    today_date = datetime.today().date()
+    for expiry_str in EXPIRY_LISTS:
+        expiry_date = datetime.strptime(expiry_str, "%d %b %Y").date()
+        if today_date <= expiry_date:
+            return expiry_str
+    return expiry
 
 
 def get_profit(trade, ltp):
@@ -60,8 +75,8 @@ def buy_or_sell_future(self, data: dict):
     return last_trade, obj
 
 
-def get_constructed_data(symbol="BANKNIFTY"):
-    options_data_lst = fetch_data(symbol)
+def get_constructed_data(symbol="BANKNIFTY", expiry=None):
+    options_data_lst = fetch_data(symbol, expiry)
 
     constructed_data = {}
     # strikeprice cannot be float for banknifty so remove decimals
@@ -80,52 +95,15 @@ def get_constructed_data(symbol="BANKNIFTY"):
     return constructed_data
 
 
-def buy_or_sell_option(self, data: dict):
-    # TODO fetch expiry from nse lib .
-    current_time = datetime.now()
+def get_final_data(data, expiry, current_time):
     constructed_data = dict(
         sorted(
-            get_constructed_data(data["symbol"]).items(),
+            get_constructed_data(data["symbol"], expiry=expiry).items(),
             key=lambda item: float(item[1]),
         )
     )
 
-    on_going_trades = NFO.query.filter_by(
-        strategy_id=data["strategy_id"],
-        exited_at=None,
-        nfo_type="option",
-        symbol=data["symbol"],
-    ).all()
-
     data["option_type"] = "ce" if data["action"] == "buy" else "pe"
-    if on_going_trades:
-        if on_going_trades[0].option_type != data["option_type"]:
-            mappings = []
-            total_profit = 0
-            for trade in on_going_trades:
-                exit_price = constructed_data[f"{trade.strike}_{trade.option_type}"]
-                profit = get_profit(trade, exit_price)
-                mappings.append(
-                    {
-                        "id": trade.id,
-                        "profit": profit,
-                        "exit_price": exit_price,
-                        "exited_at": current_time,
-                    }
-                )
-                total_profit += profit
-
-            cp = CompletedProfit.query.filter_by(strategy_id=trade.strategy_id).scalar()
-            if cp:
-                cp.profit += total_profit
-                cp.trades += len(on_going_trades)
-            else:
-                cp = CompletedProfit(profit=total_profit, strategy_id=data["strategy_id"], trades=len(on_going_trades))
-                db.session.add(cp)
-
-            db.session.bulk_update_mappings(NFO, mappings)
-            db.session.commit()
-
     strike_price = data.get("strike_price")
     strike = data.get("strike")
     if strike:
@@ -134,8 +112,8 @@ def buy_or_sell_option(self, data: dict):
         entry_price, strike = 0, 0
         for key, value in constructed_data.items():
             if (
-                data["option_type"] in key
-                and -50 < (float(value) - float(strike_price)) < 100
+                    data["option_type"] in key
+                    and -50 < (float(value) - float(strike_price)) < 100
             ):
                 entry_price, strike = value, key.split("_")[0]
                 break
@@ -181,6 +159,137 @@ def buy_or_sell_option(self, data: dict):
         del data["atm"]
 
     data["placed_at"] = current_time
+    data["expiry"] = expiry
+
+    return data
+
+
+def buy_or_sell_option(self, data: dict):
+    # TODO fetch expiry from nse lib .
+    current_time = datetime.now()
+
+    todays_date = datetime.today().date()
+    todays_expiry = False
+    for index, expiry_str in enumerate(EXPIRY_LISTS):
+        expiry_date = datetime.strptime(expiry_str, "%d %b %Y").date()
+        if todays_date > expiry_date:
+            continue
+        elif expiry_date == todays_date:
+            next_expiry = EXPIRY_LISTS[index + 1]
+            current_expiry = expiry_str
+            todays_expiry = True
+            break
+        elif todays_date < expiry_date:
+            current_expiry = EXPIRY_LISTS[index - 1]
+            break
+
+    if todays_expiry:
+        constructed_data = dict(
+            sorted(
+                get_constructed_data(data["symbol"], expiry=current_expiry).items(),
+                key=lambda item: float(item[1]),
+            )
+        )
+
+        on_going_trades = NFO.query.filter_by(
+            strategy_id=data["strategy_id"],
+            exited_at=None,
+            nfo_type="option",
+            symbol=data["symbol"],
+            expiry=current_expiry,
+        ).all()
+
+        data["option_type"] = "ce" if data["action"] == "buy" else "pe"
+        if on_going_trades:
+            total_ongoing_trades = len(on_going_trades)
+            mappings = []
+            total_profit = 0
+            for trade in on_going_trades:
+                exit_price = constructed_data[f"{trade.strike}_{trade.option_type}"]
+                profit = get_profit(trade, exit_price)
+                mappings.append(
+                    {
+                        "id": trade.id,
+                        "profit": profit,
+                        "exit_price": exit_price,
+                        "exited_at": current_time,
+                        "expiry": current_expiry,
+                    }
+                )
+                total_profit += profit
+
+            cp = CompletedProfit.query.filter_by(strategy_id=trade.strategy_id).scalar()
+            if cp:
+                cp.profit += total_profit
+                cp.trades += len(on_going_trades)
+            else:
+                cp = CompletedProfit(
+                    profit=total_profit,
+                    strategy_id=data["strategy_id"],
+                    trades=len(on_going_trades),
+                )
+                db.session.add(cp)
+
+            db.session.bulk_update_mappings(NFO, mappings)
+            db.session.commit()
+
+            data_copy = copy.deepcopy(data)
+            data_copy["quantity"] = total_ongoing_trades * (25 if data_copy["symbol"] == TRADES.BANKNIFTY else 100) * (1 if data_copy["action"] == "buy" else -1)
+            new_data = get_final_data(data=data_copy, expiry=next_expiry, current_time=current_time)
+            obj_1 = self.create_object(new_data, kwargs={})
+
+            data = get_final_data(data=data, expiry=next_expiry, current_time=current_time)
+            obj_2 = self.create_object(data, kwargs={})
+            return obj_1, obj_2
+
+    constructed_data = dict(
+        sorted(
+            get_constructed_data(data["symbol"], expiry=current_expiry).items(),
+            key=lambda item: float(item[1]),
+        )
+    )
+
+    on_going_trades = NFO.query.filter_by(
+        strategy_id=data["strategy_id"],
+        exited_at=None,
+        nfo_type="option",
+        symbol=data["symbol"],
+        expiry=current_expiry,
+    ).all()
+
+    if on_going_trades:
+        if on_going_trades[0].option_type != data["option_type"]:
+            mappings = []
+            total_profit = 0
+            for trade in on_going_trades:
+                exit_price = constructed_data[f"{trade.strike}_{trade.option_type}"]
+                profit = get_profit(trade, exit_price)
+                mappings.append(
+                    {
+                        "id": trade.id,
+                        "profit": profit,
+                        "exit_price": exit_price,
+                        "exited_at": current_time,
+                    }
+                )
+                total_profit += profit
+
+            cp = CompletedProfit.query.filter_by(strategy_id=trade.strategy_id).scalar()
+            if cp:
+                cp.profit += total_profit
+                cp.trades += len(on_going_trades)
+            else:
+                cp = CompletedProfit(
+                    profit=total_profit,
+                    strategy_id=data["strategy_id"],
+                    trades=len(on_going_trades),
+                )
+                db.session.add(cp)
+
+            db.session.bulk_update_mappings(NFO, mappings)
+            db.session.commit()
+
+    data = get_final_data(data, expiry=current_expiry, current_time=current_time)
 
     obj = self.create_object(data, kwargs={})
     return (obj,)
@@ -401,12 +510,14 @@ def close_all_trades(strategy_id=None):
             else:
                 continue
 
-            ltp = float(constructed_data[f"{nfo.strike}_{nfo.option_type}"]),
-            profit = get_profit(
-                nfo,ltp
-
-            )
-            update_mapping = {"id": nfo.id, "profit": profit, "exited_at": exited_at, "exit_price": ltp}
+            ltp = (float(constructed_data[f"{nfo.strike}_{nfo.option_type}"]),)
+            profit = get_profit(nfo, ltp)
+            update_mapping = {
+                "id": nfo.id,
+                "profit": profit,
+                "exited_at": exited_at,
+                "exit_price": ltp,
+            }
             update_mappings.append(update_mapping)
 
     db.session.bulk_update_mappings(NFO, update_mappings)
@@ -419,16 +530,11 @@ def fetch_data(symbol="BANKNIFTY", expiry=None):
     if symbol in ["BANKNIFTY", "NIFTY"]:
         atyp = "OPTIDX"
         if not expiry:
-            today_date = datetime.today().date()
-            for expiry_str in EXPIRY_LISTS:
-                expiry_date = datetime.strptime(expiry_str, "%d %b %Y").date()
-                if expiry_date >= today_date:
-                    expiry = expiry_str
-                    break
+            expiry = get_current_expiry()
     else:
         atyp = "OPTSTK"
         # TODO add logic here as well
-        expiry = "27 JAN 2022"
+        expiry = "24 FEB 2022"
 
     return requests.post(
         "https://ewmw.edelweiss.in/api/Market/optionchaindetails",

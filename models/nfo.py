@@ -35,3 +35,5 @@ class NFO(db.Model):
     strategy_id = db.Column(db.Integer, nullable=False)
     strategy_name = db.Column(db.String, nullable=False, default="RS[R0]")
     symbol = db.Column(db.String, nullable=False)
+
+    expiry = db.Column(db.Date)
