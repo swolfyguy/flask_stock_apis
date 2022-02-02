@@ -112,8 +112,8 @@ def get_final_data(data, expiry, current_time):
         entry_price, strike = 0, 0
         for key, value in constructed_data.items():
             if (
-                    data["option_type"] in key
-                    and -50 < (float(value) - float(strike_price)) < 100
+                data["option_type"] in key
+                and -50 < (float(value) - float(strike_price)) < 100
             ):
                 entry_price, strike = value, key.split("_")[0]
                 break
@@ -234,11 +234,19 @@ def buy_or_sell_option(self, data: dict):
             db.session.commit()
 
             data_copy = copy.deepcopy(data)
-            data_copy["quantity"] = total_ongoing_trades * (25 if data_copy["symbol"] == TRADES.BANKNIFTY else 100) * (1 if data_copy["action"] == "buy" else -1)
-            new_data = get_final_data(data=data_copy, expiry=next_expiry, current_time=current_time)
+            data_copy["quantity"] = (
+                total_ongoing_trades
+                * (25 if data_copy["symbol"] == TRADES.BANKNIFTY else 100)
+                * (1 if data_copy["action"] == "buy" else -1)
+            )
+            new_data = get_final_data(
+                data=data_copy, expiry=next_expiry, current_time=current_time
+            )
             obj_1 = self.create_object(new_data, kwargs={})
 
-            data = get_final_data(data=data, expiry=next_expiry, current_time=current_time)
+            data = get_final_data(
+                data=data, expiry=next_expiry, current_time=current_time
+            )
             obj_2 = self.create_object(data, kwargs={})
             return obj_1, obj_2
 
