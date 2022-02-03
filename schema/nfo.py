@@ -25,6 +25,7 @@ class NFOSchema(Schema):
     # option specific field
     strike = fields.Integer()
     option_type = fields.String()
+    expiry = fields.Date()
 
     # future specific
     future_price = fields.Float(load_only=True)

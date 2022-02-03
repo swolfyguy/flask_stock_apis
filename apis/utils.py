@@ -184,13 +184,7 @@ def buy_or_sell_option(self, data: dict):
             break
 
     if todays_expiry:
-        constructed_data = dict(
-            sorted(
-                get_constructed_data(data["symbol"], expiry=current_expiry).items(),
-                key=lambda item: float(item[1]),
-            )
-        )
-
+        models = []
         on_going_trades = NFO.query.filter_by(
             strategy_id=data["strategy_id"],
             exited_at=None,
@@ -201,6 +195,13 @@ def buy_or_sell_option(self, data: dict):
 
         data["option_type"] = "ce" if data["action"] == "buy" else "pe"
         if on_going_trades:
+            constructed_data = dict(
+                sorted(
+                    get_constructed_data(data["symbol"], expiry=current_expiry).items(),
+                    key=lambda item: float(item[1]),
+                )
+            )
+
             total_ongoing_trades = len(on_going_trades)
             mappings = []
             total_profit = 0
@@ -242,13 +243,16 @@ def buy_or_sell_option(self, data: dict):
             new_data = get_final_data(
                 data=data_copy, expiry=next_expiry, current_time=current_time
             )
-            obj_1 = self.create_object(new_data, kwargs={})
+            obj = self.create_object(new_data, kwargs={})
+            models.append(obj)
 
-            data = get_final_data(
-                data=data, expiry=next_expiry, current_time=current_time
-            )
-            obj_2 = self.create_object(data, kwargs={})
-            return obj_1, obj_2
+        data = get_final_data(
+            data=data, expiry=next_expiry, current_time=current_time
+        )
+        obj = self.create_object(data, kwargs={})
+        models.append(obj)
+
+        return models
 
     constructed_data = dict(
         sorted(
@@ -414,7 +418,7 @@ def get_computed_profit(strategy_id=None):
     for _strategy_id in (
         [strategy_id]
         if strategy_id
-        else (NFO.query.with_entities(NFO.strategy_id).distinct(NFO.strategy_id).all())
+        else (NFO.query.with_entities(NFO.strategy_id).filter_by(exited_at=None).distinct(NFO.strategy_id).all())
     ):
         if isinstance(_strategy_id, _LW):
             _strategy_id = _strategy_id[0]
