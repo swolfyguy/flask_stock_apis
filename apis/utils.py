@@ -402,7 +402,8 @@ def get_computed_profit_without_fetching_completed_profit(strategy_id=None):
 def get_computed_profit(strategy_id=None):
     current_expiry_str, next_expiry_str, todays_expiry = get_current_and_next_expiry()
     current_expiry_date = datetime.strptime(current_expiry_str, "%d %b %Y").date()
-    next_expiry_date = datetime.strptime(next_expiry_str, "%d %b %Y").date()
+    if todays_expiry:
+        next_expiry_date = datetime.strptime(next_expiry_str, "%d %b %Y").date()
 
     if strategy_id:
         if todays_expiry:
@@ -410,7 +411,7 @@ def get_computed_profit(strategy_id=None):
                 symbol=NFO.query.filter_by(strategy_id=strategy_id).first().symbol,
                 expiry=next_expiry_str,
             )
-            current_expiry_constructed_data = get_constructed_data(
+        current_expiry_constructed_data = get_constructed_data(
                 symbol=NFO.query.filter_by(strategy_id=strategy_id).first().symbol,
                 expiry=current_expiry_str,
             )
@@ -463,7 +464,10 @@ def get_computed_profit(strategy_id=None):
         ongoing_action = None
         for nfo in query.all():
             if strategy_id:
-                constructed_data = constructed_data
+                if nfo.expiry == current_expiry_date:
+                    constructed_data = current_expiry_constructed_data
+                else:
+                    constructed_data = next_expiry_constructed_data
             elif nfo.symbol == "BANKNIFTY":
                 if nfo.expiry == current_expiry_date:
                     constructed_data = bank_nifty_current_expiry_constructed_data

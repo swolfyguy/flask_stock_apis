@@ -26,7 +26,7 @@ def generate_csv():
         header = NFO.__table__.columns.keys()
         outcsv.writerow(header)
 
-        for record in NFO.query.filter(NFO.exited_at!=None).order_by(NFO.id).all():
+        for record in NFO.query.filter(NFO.exited_at != None).order_by(NFO.id).all():
             outcsv.writerow([getattr(record, c) for c in header])
 
 
@@ -108,14 +108,17 @@ def add_column():
 
 # add_column()
 
-
+#
 # def delete_rows():
 #     with app.app_context():
-#         delete_q = NFO.__table__.delete().where(NFO.exited_at != None)
+#         delete_q = NFO.__table__.delete().where(
+#             NFO.placed_at <= datetime.datetime(2022, 2, 3, 7, 30)
+#         )
 #         db.session.execute(delete_q)
 #         db.session.commit()
 #
-
+#
+# delete_rows()
 
 
 def undo_last_action():
@@ -180,8 +183,8 @@ def take_next_expiry_trades():
             entry_price, strike = 0, 0
             for key, value in constructed_data.items():
                 if (
-                        option_type in key
-                        and -50 < (float(value) - float(strike_price)) < 100
+                    option_type in key
+                    and -50 < (float(value) - float(strike_price)) < 100
                 ):
                     entry_price, strike = value, key.split("_")[0]
                     break
@@ -209,11 +212,11 @@ def difference_call():
     with app.app_context():
         action = "buy"
         for nfo in (
-                NFO.query.filter(
-                    NFO.strategy_id == 11, NFO.placed_at >= datetime.datetime(2022, 1, 13)
-                )
-                        .order_by(NFO.placed_at)
-                        .all()
+            NFO.query.filter(
+                NFO.strategy_id == 11, NFO.placed_at >= datetime.datetime(2022, 1, 13)
+            )
+            .order_by(NFO.placed_at)
+            .all()
         ):
             on_going_action = "buy" if nfo.quantity > 0 else "sell"
             if action != on_going_action:
@@ -256,25 +259,40 @@ def compare_db_with_tdview_profit():
     unrealized_profit = 0
     with app.app_context():
         for nfo in (
-                NFO.query.filter(
-                    NFO.strategy_id == 5, NFO.placed_at >= datetime.datetime(2022, 1, 4), NFO.exited_at != None
-                )
-                        .order_by(NFO.placed_at)
-                        .all()
+            NFO.query.filter(
+                NFO.strategy_id == 5,
+                NFO.placed_at >= datetime.datetime(2022, 1, 4),
+                NFO.exited_at != None,
+            )
+            .order_by(NFO.placed_at)
+            .all()
         ):
             hour = nfo.placed_at.hour
             minute = nfo.placed_at.minute
-            iso_placed_at_datetime = nfo.placed_at.replace(second=0, microsecond=0, tzinfo=None)
-            iso_exited_at_datetime = nfo.exited_at.replace(second=0, microsecond=0, tzinfo=None)
+            iso_placed_at_datetime = nfo.placed_at.replace(
+                second=0, microsecond=0, tzinfo=None
+            )
+            iso_exited_at_datetime = nfo.exited_at.replace(
+                second=0, microsecond=0, tzinfo=None
+            )
 
-            ist_placed_at_datetime = iso_placed_at_datetime + datetime.timedelta(hours=5, minutes=30)
-            ist_exited_at_datetime = iso_exited_at_datetime + datetime.timedelta(hours=5, minutes=30)
+            ist_placed_at_datetime = iso_placed_at_datetime + datetime.timedelta(
+                hours=5, minutes=30
+            )
+            ist_exited_at_datetime = iso_exited_at_datetime + datetime.timedelta(
+                hours=5, minutes=30
+            )
 
             if ist_placed_at_datetime in final_csv_lookup:
                 if ist_placed_at_datetime.weekday() != 4:
 
-                    _profit = float(final_csv_lookup[ist_placed_at_datetime][1]) - (nfo.profit)
-                    if final_csv_lookup[ist_placed_at_datetime][0] == ist_exited_at_datetime:
+                    _profit = float(final_csv_lookup[ist_placed_at_datetime][1]) - (
+                        nfo.profit
+                    )
+                    if (
+                        final_csv_lookup[ist_placed_at_datetime][0]
+                        == ist_exited_at_datetime
+                    ):
                         profit.append(_profit)
                     else:
                         unrealized_profit += _profit
