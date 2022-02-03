@@ -103,18 +103,16 @@ def get_final_data(data, expiry, current_time):
         )
     )
 
-    data["option_type"] = "ce" if data["action"] == "buy" else "pe"
+    option_type = "ce" if data["action"] == "buy" else "pe"
+    data["option_type"] = option_type
     strike_price = data.get("strike_price")
     strike = data.get("strike")
     if strike:
-        data["entry_price"] = constructed_data[f'{strike}_{data["option_type"]}']
+        data["entry_price"] = constructed_data[f"{strike}_{option_type}"]
     elif strike_price:
         entry_price, strike = 0, 0
         for key, value in constructed_data.items():
-            if (
-                data["option_type"] in key
-                and -50 < (float(value) - float(strike_price)) < 100
-            ):
+            if option_type in key and -50 < (float(value) - float(strike_price)) < 100:
                 entry_price, strike = value, key.split("_")[0]
                 break
         data["entry_price"] = entry_price
@@ -126,7 +124,7 @@ def get_final_data(data, expiry, current_time):
             strike = constructed_data["atm"]
             data["strike"] = int(float(strike))
             data["entry_price"] = constructed_data[
-                f'{strike.split(".")[0]}_{data["option_type"]}'
+                f'{strike.split(".")[0]}_{option_type}'
             ]
         else:
             # TODO not completed yet, need to decide which one to buy atm or with most vol
@@ -135,13 +133,11 @@ def get_final_data(data, expiry, current_time):
             max_vol_strike = None
             max_vol_strike_price = None
             for option_data in options_data_lst:
-                option_vol = float(option_data[f'{data["option_type"]}Qt']["vol"])
+                option_vol = float(option_data[f"{option_type}Qt"]["vol"])
                 if option_vol > max_vol:
                     max_vol = option_vol
                     max_vol_strike = option_data["stkPrc"]
-                    max_vol_strike_price = option_data[f'{data["option_type"]}Qt'][
-                        "ltp"
-                    ]
+                    max_vol_strike_price = option_data[f"{option_type}Qt"]["ltp"]
 
             data["strike"] = int(float(max_vol_strike))
             data["entry_price"] = max_vol_strike_price
@@ -227,6 +223,10 @@ def get_current_and_next_expiry():
 def buy_or_sell_option(self, data: dict):
     current_time = datetime.now()
     current_expiry, next_expiry, todays_expiry = get_current_and_next_expiry()
+    symbol = data["symbol"]
+    action = data["action"]
+    option_type = "ce" if action == "buy" else "pe"
+    data["option_type"] = option_type
 
     if todays_expiry:
         trades = []
@@ -234,48 +234,50 @@ def buy_or_sell_option(self, data: dict):
             strategy_id=data["strategy_id"],
             exited_at=None,
             nfo_type="option",
-            symbol=data["symbol"],
+            symbol=symbol,
             expiry=current_expiry,
         ).all()
 
-        data["option_type"] = "ce" if data["action"] == "buy" else "pe"
         if current_expirys_ongoing_trades:
+            current_expirys_ongoing_action = (
+                "buy" if current_expirys_ongoing_trades[0].quantity > 0 else "sell"
+            )
             total_ongoing_trades = sum(
                 [trade.quantity for trade in current_expirys_ongoing_trades]
             )
             close_ongoing_trades(
                 current_expirys_ongoing_trades,
-                data["symbol"],
+                symbol,
                 current_expiry,
                 current_time,
             )
-            data_copy = copy.deepcopy(data)
-            data_copy["quantity"] = (
-                total_ongoing_trades
-                if data_copy["action"] == "buy"
-                else -total_ongoing_trades
-            )
-            next_expiry_data = get_final_data(
-                data=data_copy, expiry=next_expiry, current_time=current_time
-            )
-            obj = self.create_object(next_expiry_data, kwargs={})
-            trades.append(obj)
 
-        next_expirys_on_going_trades = NFO.query.filter_by(
+            if current_expirys_ongoing_action == action:
+                data_copy = copy.deepcopy(data)
+                data_copy["quantity"] = (
+                    total_ongoing_trades if action == "buy" else -total_ongoing_trades
+                )
+                next_expiry_data = get_final_data(
+                    data=data_copy, expiry=next_expiry, current_time=current_time
+                )
+                obj = self.create_object(next_expiry_data, kwargs={})
+                trades.append(obj)
+
+        next_expirys_ongoing_trades = NFO.query.filter_by(
             strategy_id=data["strategy_id"],
             exited_at=None,
             nfo_type="option",
-            symbol=data["symbol"],
+            symbol=symbol,
             expiry=next_expiry,
         ).all()
 
         if (
-            next_expirys_on_going_trades
-            and next_expirys_on_going_trades[0].option_type != data["option_type"]
+            next_expirys_ongoing_trades
+            and next_expirys_ongoing_trades[0].option_type != option_type
         ):
             close_ongoing_trades(
-                next_expirys_on_going_trades,
-                data["symbol"],
+                next_expirys_ongoing_trades,
+                symbol,
                 next_expiry,
                 current_time,
             )
@@ -286,21 +288,21 @@ def buy_or_sell_option(self, data: dict):
         return trades
 
     else:
-        current_expirys_on_going_trades = NFO.query.filter_by(
+        current_expirys_ongoing_trades = NFO.query.filter_by(
             strategy_id=data["strategy_id"],
             exited_at=None,
             nfo_type="option",
-            symbol=data["symbol"],
+            symbol=symbol,
             expiry=current_expiry,
         ).all()
 
         if (
-            current_expirys_on_going_trades
-            and current_expirys_on_going_trades[0].option_type != data["option_type"]
+            current_expirys_ongoing_trades
+            and current_expirys_ongoing_trades[0].option_type != option_type
         ):
             close_ongoing_trades(
-                current_expirys_on_going_trades,
-                data["symbol"],
+                current_expirys_ongoing_trades,
+                symbol,
                 current_expiry,
                 current_time,
             )
