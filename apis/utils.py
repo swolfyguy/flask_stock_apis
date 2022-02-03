@@ -185,7 +185,7 @@ def buy_or_sell_option(self, data: dict):
 
     if todays_expiry:
         models = []
-        on_going_trades = NFO.query.filter_by(
+        current_expirys_on_going_trades = NFO.query.filter_by(
             strategy_id=data["strategy_id"],
             exited_at=None,
             nfo_type="option",
@@ -194,7 +194,7 @@ def buy_or_sell_option(self, data: dict):
         ).all()
 
         data["option_type"] = "ce" if data["action"] == "buy" else "pe"
-        if on_going_trades:
+        if current_expirys_on_going_trades:
             constructed_data = dict(
                 sorted(
                     get_constructed_data(data["symbol"], expiry=current_expiry).items(),
@@ -202,10 +202,10 @@ def buy_or_sell_option(self, data: dict):
                 )
             )
 
-            total_ongoing_trades = len(on_going_trades)
+            total_ongoing_trades = len(current_expirys_on_going_trades)
             mappings = []
             total_profit = 0
-            for trade in on_going_trades:
+            for trade in current_expirys_on_going_trades:
                 exit_price = constructed_data[f"{trade.strike}_{trade.option_type}"]
                 profit = get_profit(trade, exit_price)
                 mappings.append(
@@ -222,12 +222,12 @@ def buy_or_sell_option(self, data: dict):
             cp = CompletedProfit.query.filter_by(strategy_id=trade.strategy_id).scalar()
             if cp:
                 cp.profit += total_profit
-                cp.trades += len(on_going_trades)
+                cp.trades += len(current_expirys_on_going_trades)
             else:
                 cp = CompletedProfit(
                     profit=total_profit,
                     strategy_id=data["strategy_id"],
-                    trades=len(on_going_trades),
+                    trades=len(current_expirys_on_going_trades),
                 )
                 db.session.add(cp)
 
@@ -246,9 +246,58 @@ def buy_or_sell_option(self, data: dict):
             obj = self.create_object(new_data, kwargs={})
             models.append(obj)
 
-        data = get_final_data(
-            data=data, expiry=next_expiry, current_time=current_time
-        )
+        next_expirys_on_going_trades = NFO.query.filter_by(
+            strategy_id=data["strategy_id"],
+            exited_at=None,
+            nfo_type="option",
+            symbol=data["symbol"],
+            expiry=next_expiry,
+        ).all()
+
+        if next_expirys_on_going_trades:
+            if next_expirys_on_going_trades[0].option_type != data["option_type"]:
+                next_expirys_constructed_data = dict(
+                    sorted(
+                        get_constructed_data(
+                            data["symbol"], expiry=next_expiry
+                        ).items(),
+                        key=lambda item: float(item[1]),
+                    )
+                )
+
+                mappings = []
+                total_profit = 0
+                for trade in next_expirys_on_going_trades:
+                    exit_price = next_expirys_constructed_data[f"{trade.strike}_{trade.option_type}"]
+                    profit = get_profit(trade, exit_price)
+                    mappings.append(
+                        {
+                            "id": trade.id,
+                            "profit": profit,
+                            "exit_price": exit_price,
+                            "exited_at": current_time,
+                        }
+                    )
+                    total_profit += profit
+
+                cp = CompletedProfit.query.filter_by(
+                    strategy_id=trade.strategy_id
+                ).scalar()
+                if cp:
+                    cp.profit += total_profit
+                    cp.trades += len(next_expirys_on_going_trades)
+                else:
+                    cp = CompletedProfit(
+                        profit=total_profit,
+                        strategy_id=data["strategy_id"],
+                        trades=len(next_expirys_on_going_trades),
+                    )
+                    db.session.add(cp)
+
+                db.session.bulk_update_mappings(NFO, mappings)
+                db.session.commit()
+
+        data = get_final_data(data=data, expiry=next_expiry, current_time=current_time)
         obj = self.create_object(data, kwargs={})
         models.append(obj)
 
@@ -261,7 +310,7 @@ def buy_or_sell_option(self, data: dict):
         )
     )
 
-    on_going_trades = NFO.query.filter_by(
+    current_expirys_on_going_trades = NFO.query.filter_by(
         strategy_id=data["strategy_id"],
         exited_at=None,
         nfo_type="option",
@@ -269,11 +318,11 @@ def buy_or_sell_option(self, data: dict):
         expiry=current_expiry,
     ).all()
 
-    if on_going_trades:
-        if on_going_trades[0].option_type != data["option_type"]:
+    if current_expirys_on_going_trades:
+        if current_expirys_on_going_trades[0].option_type != data["option_type"]:
             mappings = []
             total_profit = 0
-            for trade in on_going_trades:
+            for trade in current_expirys_on_going_trades:
                 exit_price = constructed_data[f"{trade.strike}_{trade.option_type}"]
                 profit = get_profit(trade, exit_price)
                 mappings.append(
@@ -289,12 +338,12 @@ def buy_or_sell_option(self, data: dict):
             cp = CompletedProfit.query.filter_by(strategy_id=trade.strategy_id).scalar()
             if cp:
                 cp.profit += total_profit
-                cp.trades += len(on_going_trades)
+                cp.trades += len(current_expirys_on_going_trades)
             else:
                 cp = CompletedProfit(
                     profit=total_profit,
                     strategy_id=data["strategy_id"],
-                    trades=len(on_going_trades),
+                    trades=len(current_expirys_on_going_trades),
                 )
                 db.session.add(cp)
 
@@ -418,7 +467,12 @@ def get_computed_profit(strategy_id=None):
     for _strategy_id in (
         [strategy_id]
         if strategy_id
-        else (NFO.query.with_entities(NFO.strategy_id).filter_by(exited_at=None).distinct(NFO.strategy_id).all())
+        else (
+            NFO.query.with_entities(NFO.strategy_id)
+            .filter_by(exited_at=None)
+            .distinct(NFO.strategy_id)
+            .all()
+        )
     ):
         if isinstance(_strategy_id, _LW):
             _strategy_id = _strategy_id[0]
