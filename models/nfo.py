@@ -18,6 +18,12 @@ class NFO(db.Model):
     exit_price = db.Column(db.Float, nullable=True)
     # EX: 25000
     profit = db.Column(db.Float, nullable=True)
+
+    # Future Details
+    future_entry_price = db.Column(db.Float, nullable=True)
+    future_exit_price = db.Column(db.Float, nullable=True)
+    future_profit = db.Column(db.Float, nullable=True)
+
     # Timestamp of Order placed at
     placed_at = db.Column(
         db.TIMESTAMP(timezone=True), nullable=False, default=datetime.now()

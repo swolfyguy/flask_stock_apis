@@ -46,6 +46,11 @@ def get_profit(trade, ltp):
     return (b - a) * trade.quantity - 30
 
 
+def get_future_profit(trade, ltp):
+    # TODO charges to be deducted should be dynamic because in future apart from Bank and Nifty we will have others F&O
+    return (ltp - trade.future_entry_price) * trade.quantity - 320
+
+
 def buy_or_sell_future(self, data: dict):
     last_trade = NFO.query.filter_by(
         strategy_id=data["strategy_id"], exited_at=None, nfo_type="future"
@@ -160,7 +165,7 @@ def get_final_data(data, expiry, current_time):
     return data
 
 
-def close_ongoing_trades(ongoing_trades, symbol, expiry_str, current_time):
+def close_ongoing_trades(ongoing_trades, symbol, expiry_str, current_time, data=None):
     constructed_data = dict(
         sorted(
             get_constructed_data(symbol, expiry=expiry_str).items(),
@@ -173,12 +178,16 @@ def close_ongoing_trades(ongoing_trades, symbol, expiry_str, current_time):
     for trade in ongoing_trades:
         exit_price = constructed_data[f"{trade.strike}_{trade.option_type}"]
         profit = get_profit(trade, exit_price)
+        future_exit_price = data.get("future_entry_price", 0)
+        future_profit = get_future_profit(trade, future_exit_price) if trade.future_entry_price else 0
         mappings.append(
             {
                 "id": trade.id,
                 "profit": profit,
                 "exit_price": exit_price,
                 "exited_at": current_time,
+                "future_exit_price": future_exit_price,
+                "future_profit": future_profit,
             }
         )
         total_profit += profit
@@ -250,6 +259,7 @@ def buy_or_sell_option(self, data: dict):
                 symbol,
                 current_expiry,
                 current_time,
+                data
             )
 
             if current_expirys_ongoing_action == action:
@@ -280,6 +290,7 @@ def buy_or_sell_option(self, data: dict):
                 symbol,
                 next_expiry,
                 current_time,
+                data
             )
         data = get_final_data(data=data, expiry=next_expiry, current_time=current_time)
         obj = self.create_object(data, kwargs={})
@@ -305,6 +316,7 @@ def buy_or_sell_option(self, data: dict):
                 symbol,
                 current_expiry,
                 current_time,
+                data
             )
         data = get_final_data(data, expiry=current_expiry, current_time=current_time)
 
@@ -412,9 +424,9 @@ def get_computed_profit(strategy_id=None):
                 expiry=next_expiry_str,
             )
         current_expiry_constructed_data = get_constructed_data(
-                symbol=NFO.query.filter_by(strategy_id=strategy_id).first().symbol,
-                expiry=current_expiry_str,
-            )
+            symbol=NFO.query.filter_by(strategy_id=strategy_id).first().symbol,
+            expiry=current_expiry_str,
+        )
     else:
         if todays_expiry:
             bank_nifty_next_expiry_constructed_data = get_constructed_data(

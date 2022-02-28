@@ -28,7 +28,9 @@ class NFOSchema(Schema):
     expiry = fields.Date()
 
     # future specific
-    future_price = fields.Float(load_only=True)
+    future_entry_price = fields.Float()
+    future_exit_price = fields.Float()
+    future_profit = fields.Float()
 
     # strategy details
     strategy_id = fields.Integer()

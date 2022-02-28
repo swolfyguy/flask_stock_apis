@@ -3,3 +3,5 @@
 venv/
 **/__pycache__/
 *.pyc
+db_data/
+trading_view_chart_calls
