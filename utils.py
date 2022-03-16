@@ -25,20 +25,36 @@ from models.till_yesterdays_profit import TillYesterdaysProfit
 
 def generate_csv():
     with app.app_context():
-        file = "db_data/28_feb.csv"
+        file = "db_data/02_mar.csv"
         with open(file, "w") as csvfile:
             outcsv = csv.writer(
                 csvfile, delimiter=",", quotechar='"', quoting=csv.QUOTE_MINIMAL
             )
-            header = NFO.__table__.columns.keys()
+            # header = NFO.__table__.columns.keys()
+            header = [
+                "id",
+                "nfo_type",
+                "quantity",
+                "entry_price",
+                "exit_price",
+                "profit",
+                "placed_at",
+                "exited_at",
+                "strike",
+                "option_type",
+                "strategy_id",
+                "strategy_name",
+                "symbol",
+                "future_entry_price",
+                "future_exit_price",
+                "future_profit",
+            ]
             outcsv.writerow(header)
 
-            for record in NFO.query.filter(NFO.exited_at != None).order_by(NFO.id).all():
+            for record in (
+                NFO.query.filter(NFO.exited_at != None).order_by(NFO.id).all()
+            ):
                 outcsv.writerow([getattr(record, c) for c in header])
-
-
-
-# generate_csv()
 
 
 # strategy_id = {}
@@ -65,41 +81,43 @@ if __name__ != "__main__":
     # for row in pd.read_csv('nfo_new.csv', nrows=1000):
     #     pass
 
-    # date_profit_dict = {}
-    # with open("db_data/till_30_jan.csv", "r") as csvfile:
-    #     lines = csv.reader(csvfile, delimiter=",")
-    #     for index, row in enumerate(lines):
-    #         # strategy_id
-    #         if row[10] == "3":
-    #             try:
-    #                 exited_at_date_time = parser.parse(row[7])
-    #                 date_ = exited_at_date_time.date()
-    #                 if date_ in date_profit_dict:
-    #                     date_profit_dict[date_] = date_profit_dict[date_] + int(
-    #                         eval(row[5])
-    #                     )
-    #                 else:
-    #                     date_profit_dict[date_] = int(eval(row[5]))
-    #             except:
-    #                 pass
-
     date_profit_dict = {}
-    with open("trading_view_chart_calls/testing_Mahesh_strategy_[RS]_V0_2022-02-25.csv", "r") as csvfile:
+    with open("db_data/till_2_mar.csv", "r") as csvfile:
         lines = csv.reader(csvfile, delimiter=",")
         for index, row in enumerate(lines):
             # strategy_id
-            if index %2 ==0:
+            if row[10] == "4":
                 try:
-                    exited_at_date_time = parser.parse(row[3])
+                    exited_at_date_time = parser.parse(row[7])
                     date_ = exited_at_date_time.date()
                     if date_ in date_profit_dict:
                         date_profit_dict[date_] = date_profit_dict[date_] + int(
-                            eval(row[6])
+                            eval(row[5])
                         )
                     else:
                         date_profit_dict[date_] = int(eval(row[5]))
                 except:
                     pass
+
+    # date_profit_dict = {}
+    # with open(
+    #     "trading_view_chart_calls/testing_Mahesh_strategy_[RS]_V0_2022-02-25.csv", "r"
+    # ) as csvfile:
+    #     lines = csv.reader(csvfile, delimiter=",")
+    #     for index, row in enumerate(lines):
+    #         # strategy_id
+    #         if index % 2 == 0:
+    #             try:
+    #                 exited_at_date_time = parser.parse(row[3])
+    #                 date_ = exited_at_date_time.date()
+    #                 if date_ in date_profit_dict:
+    #                     date_profit_dict[date_] = date_profit_dict[date_] + int(
+    #                         eval(row[6])
+    #                     )
+    #                 else:
+    #                     date_profit_dict[date_] = int(eval(row[5]))
+    #             except:
+    #                 pass
 
     sum = 0
     for key, value in date_profit_dict.items():
@@ -109,19 +127,19 @@ if __name__ != "__main__":
 
     plt.plot(x, y, color="g", linestyle="-", marker="o", label="profit")
 
-    # # joins the x and y values
-    # for x, y in zip(x, y):
-    #     label = round(y / 100000, 2)
-    #
-    #     plt.annotate(
-    #         label,  # this is the value which we want to label (text)
-    #         (x, y),  # x and y is the points location where we have to label
-    #         textcoords="offset points",
-    #         xytext=(0, 10),  # this for the distance between the points
-    #         # and the text label
-    #         ha="left",
-    #         arrowprops=dict(arrowstyle="->", color="green"),
-    #     )
+    # joins the x and y values
+    for x, y in zip(x, y):
+        label = round(y / 100000, 2)
+
+        plt.annotate(
+            label,  # this is the value which we want to label (text)
+            (x, y),  # x and y is the points location where we have to label
+            textcoords="offset points",
+            xytext=(0, 10),  # this for the distance between the points
+            # and the text label
+            ha="left",
+            arrowprops=dict(arrowstyle="->", color="green"),
+        )
 
     plt.xticks(rotation=25)
     plt.xlabel("date_time")
@@ -151,13 +169,11 @@ def add_column():
 #
 # def delete_rows():
 #     with app.app_context():
-#         delete_q = NFO.__table__.delete().where(
-#             and_(NFO.strategy_id.in_([1,2]), NFO.exited_at == None)
-#         )
+#         delete_q = NFO.__table__.delete().where(NFO.strategy_id == 12)
 #         db.session.execute(delete_q)
 #         db.session.commit()
-
-
+#
+#
 # delete_rows()
 
 
@@ -271,17 +287,14 @@ datetime_format = "%Y-%m-%dT%H:%M"
 
 
 def read_tv_alerts():
-    todays_date = datetime.date.today() - datetime.timedelta(days=1)
+    todays_date = datetime.date.today()
     with open(
-        "trading_view_chart_calls/TradingView_Alerts_Log_2022-03-01.csv", "r"
+        "trading_view_chart_calls/TradingView_Alerts_Log_2022-03-15.csv", "r"
     ) as csvfile:
         lines = csv.reader(csvfile, delimiter=",")
         executed_time_lst = []
         for index, row in enumerate(lines):
-            if (
-                index > 0
-                and row[2] == "BankNifty Affordable; MV:27; TF:5, M_server"
-            ):
+            if index > 0 and row[2] == "BankNifty Every Candle; MV:87; TF:5, M_server":
                 executed_time = parser.parse(row[4]) + datetime.timedelta(
                     hours=5, minutes=30
                 )
@@ -316,12 +329,14 @@ def read_tv_alerts():
 
 # CONCLUSION
 
+
 # BankNifty
 # Take any call beyond 26 (lowest drawdwn ever)  like 27, 41 and 87 (v good for every candle) are right on spot excepts its one candle behind
+# for single call 27 or 28 is good
 
 # Nifty
 # Take any call beyond 18, 21(v good for every Candle)
-
+# for single call i am testing with 7 lets see how it goes
 
 # RIGHT ON SPOT with tradingview in terms of call
 # BankNifty Every Candle 87,
