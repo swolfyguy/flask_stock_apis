@@ -13,16 +13,13 @@ from models.nfo import NFO
 
 
 EXPIRY_LISTS = [
-    "03 FEB 2022",
-    "10 FEB 2022",
-    "17 FEB 2022",
-    "24 FEB 2022",
-    "03 MAR 2022",
-    "10 MAR 2022",
     "17 MAR 2022",
     "24 MAR 2022",
     "31 MAR 2022",
+    "07 APR 2022",
+    "13 APR 2022",
     "28 APR 2022",
+    "26 MAY 2022"
 ]
 
 
@@ -179,7 +176,11 @@ def close_ongoing_trades(ongoing_trades, symbol, expiry_str, current_time, data=
         exit_price = constructed_data[f"{trade.strike}_{trade.option_type}"]
         profit = get_profit(trade, exit_price)
         future_exit_price = data.get("future_entry_price", 0)
-        future_profit = get_future_profit(trade, future_exit_price) if trade.future_entry_price else 0
+        future_profit = (
+            get_future_profit(trade, future_exit_price)
+            if trade.future_entry_price
+            else 0
+        )
         mappings.append(
             {
                 "id": trade.id,
@@ -259,7 +260,7 @@ def buy_or_sell_option(self, data: dict):
                 symbol,
                 current_expiry,
                 current_time,
-                data
+                data,
             )
 
             if current_expirys_ongoing_action == action:
@@ -286,11 +287,7 @@ def buy_or_sell_option(self, data: dict):
             and next_expirys_ongoing_trades[0].option_type != option_type
         ):
             close_ongoing_trades(
-                next_expirys_ongoing_trades,
-                symbol,
-                next_expiry,
-                current_time,
-                data
+                next_expirys_ongoing_trades, symbol, next_expiry, current_time, data
             )
         data = get_final_data(data=data, expiry=next_expiry, current_time=current_time)
         obj = self.create_object(data, kwargs={})
@@ -316,7 +313,7 @@ def buy_or_sell_option(self, data: dict):
                 symbol,
                 current_expiry,
                 current_time,
-                data
+                data,
             )
         data = get_final_data(data, expiry=current_expiry, current_time=current_time)
 
