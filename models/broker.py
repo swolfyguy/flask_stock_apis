@@ -1,0 +1,1 @@
+from extensions import dbclass Broker(db.Model):    __tablename__ = "broker"    id = db.Column(db.Integer, primary_key=True)    access_token = db.Column(db.String, allow_none=False)    name = db.Column(db.String, allow_none=False)    username = db.Column(db.String, allow_none=False)    password = db.Column(db.String, allow_none=False)

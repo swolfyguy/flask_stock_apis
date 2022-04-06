@@ -24,13 +24,12 @@ EXPIRY_LISTS = [
 
 
 def get_current_expiry():
-    expiry = None
-    today_date = datetime.today().date()
+    today_date = datetime.now().date()
     for expiry_str in EXPIRY_LISTS:
         expiry_date = datetime.strptime(expiry_str, "%d %b %Y").date()
         if today_date <= expiry_date:
             return expiry_str
-    return expiry
+    return None
 
 
 def get_profit(trade, ltp):
@@ -108,8 +107,7 @@ def get_final_data(data, expiry, current_time):
     option_type = "ce" if data["action"] == "buy" else "pe"
     data["option_type"] = option_type
     strike_price = data.get("strike_price")
-    strike = data.get("strike")
-    if strike:
+    if strike := data.get("strike"):
         data["entry_price"] = constructed_data[f"{strike}_{option_type}"]
     elif strike_price:
         entry_price, strike = 0, 0
@@ -193,8 +191,7 @@ def close_ongoing_trades(ongoing_trades, symbol, expiry_str, current_time, data=
         )
         total_profit += profit
 
-    cp = CompletedProfit.query.filter_by(strategy_id=trade.strategy_id).scalar()
-    if cp:
+    if cp := CompletedProfit.query.filter_by(strategy_id=trade.strategy_id).scalar():
         cp.profit += total_profit
         cp.trades += len(ongoing_trades)
     else:

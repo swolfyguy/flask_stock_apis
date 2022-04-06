@@ -25,7 +25,7 @@ from models.till_yesterdays_profit import TillYesterdaysProfit
 
 def generate_csv():
     with app.app_context():
-        file = "db_data/02_mar.csv"
+        file = "db_data/6_apr.csv"
         with open(file, "w") as csvfile:
             outcsv = csv.writer(
                 csvfile, delimiter=",", quotechar='"', quoting=csv.QUOTE_MINIMAL
@@ -57,6 +57,8 @@ def generate_csv():
                 outcsv.writerow([getattr(record, c) for c in header])
 
 
+# generate_csv()
+
 # strategy_id = {}
 # with open("db_data/till_30_jan.csv", "r") as csvfile:
 #         lines = csv.reader(csvfile, delimiter=",")
@@ -82,11 +84,11 @@ if __name__ != "__main__":
     #     pass
 
     date_profit_dict = {}
-    with open("db_data/till_2_mar.csv", "r") as csvfile:
+    with open("db_data/till_26_mar.csv", "r") as csvfile:
         lines = csv.reader(csvfile, delimiter=",")
         for index, row in enumerate(lines):
             # strategy_id
-            if row[10] == "4":
+            if row[10] == "3":
                 try:
                     exited_at_date_time = parser.parse(row[7])
                     date_ = exited_at_date_time.date()
@@ -169,7 +171,7 @@ def add_column():
 #
 # def delete_rows():
 #     with app.app_context():
-#         delete_q = NFO.__table__.delete().where(NFO.strategy_id == 12)
+#         delete_q = NFO.__table__.delete().where(NFO.exited_at != None)
 #         db.session.execute(delete_q)
 #         db.session.commit()
 #
@@ -191,7 +193,7 @@ def difference_call():
         action = "buy"
         for nfo in (
             NFO.query.filter(
-                NFO.strategy_id == 8, NFO.placed_at >= datetime.datetime(2022, 1, 13)
+                NFO.strategy_id == 12, NFO.placed_at >= datetime.datetime(2022, 1, 13)
             )
             .order_by(NFO.placed_at)
             .all()
@@ -314,14 +316,6 @@ def read_tv_alerts():
 
 # read_tv_alerts()
 
-
-# secret = 'sJaR69XLRoRYifX4HegNWjB-4_snDQqJg-8VsUVtJdg.dqpvE7BnLgAys8myMjUFtYp5wt95ktQ1BS6H-V1lpEQ'
-# app_id = 'FgshPEm3jw'
-# secret = '9wg5GZzBhiOjVrf10OGYjwECrMVSnwecSLRtp8hsvJwyWDiGpFpTzOvTkwypJOcs'
-# username = '569619'
-# password = 'SANkok@94'
-
-
 # compare_db_with_tdview_profit()
 
 # take_next_expiry_trades()
@@ -341,6 +335,10 @@ def read_tv_alerts():
 # RIGHT ON SPOT with tradingview in terms of call
 # BankNifty Every Candle 87,
 # Nifty Every Candle 21
+
+# DO not trade with version 4 because its highly unpredictable when it comes to trigger signals
+# even nifty with MV 12 is not on spot
+# on trading view its continues 24 trades and in our db its hardly 4 trades because opposite signal was generated
 
 
 # BankNifty Testing Affordable 14 , sometimes one candle sometimes its 3 candles behind   Strategy_id = 8

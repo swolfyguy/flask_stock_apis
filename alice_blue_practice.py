@@ -19,7 +19,7 @@ start_time = datetime.datetime.now()
 alice = AliceBlue(
     username,
     password,
-    'I1KkboYbiIgtgBhTmgfpEt85CQjObda_tMSwAE--WOY.-JMx-Tffl8urvGUEWp2CN9AQ5JZxIYTLsBT-PuxA91o',
+    'M-A7f5UaoQAmP7RzP-I_iVco5adDpnhsNuSWU47gDFs.ycjDjeQkM_uypRhyCKd7tWUiOvRzp68oiNC_v7haohE',
     master_contracts_to_download=["NFO"],
 )
 
@@ -47,7 +47,7 @@ alice.start_websocket(
 
 instrument = alice.get_instrument_for_fno(
     symbol="BANKNIFTY",
-    expiry_date=date(2022, 3, 31),
+    expiry_date=date(2022, 4, 7),
     is_fut=True,
     strike=None,
     is_CE=False,
@@ -55,4 +55,19 @@ instrument = alice.get_instrument_for_fno(
 
 while True:
     alice.subscribe(instrument, LiveFeedType.MARKET_DATA)
-    sleep(5)
+    sleep(2)
+
+
+alice.place_order(
+    transaction_type=TransactionType.Buy,
+    instrument=instrument,
+    quantity=25,
+    order_type=OrderType.Market,
+    product_type=ProductType.Delivery,
+    price=0.0,
+    trigger_price=None,
+    stop_loss=None,
+    square_off=None,
+    trailing_sl=None,
+    is_amo=False,
+)
