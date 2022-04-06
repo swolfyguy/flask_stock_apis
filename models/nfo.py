@@ -43,3 +43,5 @@ class NFO(db.Model):
     symbol = db.Column(db.String, nullable=False)
 
     expiry = db.Column(db.Date)
+
+    broker_id = db.relationship("broker", back_populates="trades")

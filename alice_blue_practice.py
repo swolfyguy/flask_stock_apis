@@ -61,7 +61,7 @@ while True:
 alice.place_order(
     transaction_type=TransactionType.Buy,
     instrument=instrument,
-    quantity=25,
+    quantity=50,
     order_type=OrderType.Market,
     product_type=ProductType.Delivery,
     price=0.0,

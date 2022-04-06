@@ -1,6 +1,6 @@
 # Create logical data abstraction (same as data storage for this first example)
 from marshmallow_jsonapi import fields
-from marshmallow_jsonapi.flask import Schema
+from marshmallow_jsonapi.flask import Schema, Relationship
 
 
 class NFOSchema(Schema):
@@ -40,3 +40,14 @@ class NFOSchema(Schema):
     symbol = fields.String()  # TODO move it to models later
     strike_price = fields.Float(load_only=True)
     atm = fields.Boolean(load_only=True)
+
+    broker_id = fields.UUID()
+
+    # broker = Relationship(
+    #     self_view="event_participant_detail",
+    #     self_view_kwargs={"id": "<id>"},
+    #     related_view="contact_detail",
+    #     related_view_kwargs={"id": "<sa_contact_id>"},
+    #     schema="ContactSchema",
+    #     type_="contact",
+    # )
