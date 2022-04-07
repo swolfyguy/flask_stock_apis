@@ -154,7 +154,7 @@ if __name__ != "__main__":
 
 def add_column():
     with app.app_context():
-        col = db.Column("future_profit", db.Float)
+        col = db.Column("broker_id", db.UUID, db.ForeignKey("broker.id"), nullable=True)
         column_name = col.compile(dialect=db.engine.dialect)
         column_type = col.type.compile(db.engine.dialect)
         table_name = NFO.__tablename__

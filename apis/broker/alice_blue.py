@@ -19,18 +19,36 @@ def place_alice_blue_order(
     """
 
     broker = Broker.query.filter_by(name="alice_blue").scalar()
+    try:
+        alice = AliceBlue(
+            username=broker.username,
+            password=broker.password,
+            access_token=broker.access_token,
+            master_contracts_to_download=["NFO"],
+        )
+    except:
+        broker = Broker.query.filter_by(name="alice_blue").with_for_update().scalar()
+        access_token = AliceBlue.login_and_get_access_token(
+            username=broker.username,
+            password=broker.password,
+            twoFA="1994",
+            api_secret=broker.api_secret,
+            app_id=broker.app_id,
+        )
+        broker.access_token = access_token
+        db.session.commit()
 
-    alice = AliceBlue(
-        username=broker.username,
-        password=broker.password,
-        access_token=broker.access_token,
-        master_contracts_to_download=["NFO"],
-    )
+        alice = AliceBlue(
+            username=broker.username,
+            password=broker.password,
+            access_token=access_token,
+            master_contracts_to_download=["NFO"],
+        )
 
     close_order_action_id_list = []
 
     if isinstance(expiry, str):
-        expiry = datetime.strptime(expiry, "%d %b %Y").date()
+        expiry = datetime.datetime.strptime(expiry, "%d %b %Y").date()
 
     for strike, quantity in strike_quantity_dict.items():
         instrument = alice.get_instrument_for_fno(
@@ -41,52 +59,22 @@ def place_alice_blue_order(
             is_CE=quantity > 0,
         )
 
-        try:
-            order_id = alice.place_order(
-                transaction_type=TransactionType.Buy
-                if action == "buy"
-                else TransactionType.Sell,
-                instrument=instrument,
-                quantity=quantity if quantity > 0 else (-1 * quantity),
-                order_type=OrderType.Market,
-                product_type=ProductType.Delivery,
-                price=0.0,
-                trigger_price=None,
-                stop_loss=None,
-                square_off=None,
-                trailing_sl=None,
-                is_amo=False,
-            )
-            close_order_action_id_list.append(order_id)
-
-        except:
-            broker = Broker.query.filter_by(name="alice_blue").with_update().scalar()
-            access_token = AliceBlue.login_and_get_access_token(
-                username=broker.username,
-                password=broker.password,
-                twoFA="1994",
-                api_secret=broker.api_secret,
-                app_id=broker.app_id,
-            )
-            broker.access_token = access_token
-            db.session.commit()
-
-            order_id = alice.place_order(
-                transaction_type=TransactionType.Buy
-                if action == "buy"
-                else TransactionType.Sell,
-                instrument=instrument,
-                quantity=quantity if quantity > 0 else (-1 * quantity),
-                order_type=OrderType.Market,
-                product_type=ProductType.Delivery,
-                price=0.0,
-                trigger_price=None,
-                stop_loss=None,
-                square_off=None,
-                trailing_sl=None,
-                is_amo=False,
-            )
-            close_order_action_id_list.append(order_id)
+        order_id = alice.place_order(
+            transaction_type=TransactionType.Buy
+            if action == "buy"
+            else TransactionType.Sell,
+            instrument=instrument,
+            quantity=quantity if quantity > 0 else (-1 * quantity),
+            order_type=OrderType.Market,
+            product_type=ProductType.Delivery,
+            price=0.0,
+            trigger_price=None,
+            stop_loss=None,
+            square_off=None,
+            trailing_sl=None,
+            is_amo=False,
+        )
+        close_order_action_id_list.append(order_id)
 
     for _id in close_order_action_id_list:
         response = alice.get_order_history(_id)

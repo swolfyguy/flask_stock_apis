@@ -1,6 +1,7 @@
 import copy
 from datetime import datetime
 from typing import List
+from uuid import UUID
 
 import requests
 
@@ -269,8 +270,8 @@ def buy_or_sell_option(self, data: dict):
             )
 
             strike_quantity_dict = get_aggregated_trades(today_expirys_ongoing_trades)
-            if broker := data.get("broker"):
-                if broker == "alice_blue":
+            if broker_id := data.get("broker_id"):
+                if broker_id == UUID("faeda058-2d3a-4ad6-b29f-d3fb6897cd8b"):
                     place_alice_blue_order(
                         strike_quantity_dict,
                         symbol,
@@ -323,8 +324,8 @@ def buy_or_sell_option(self, data: dict):
             and next_expirys_ongoing_trades[0].option_type != option_type
         ):
             strike_quantity_dict = get_aggregated_trades(next_expirys_ongoing_trades)
-            if broker := data.get("broker"):
-                if broker == "alice_blue":
+            if broker_id := data.get("broker_id"):
+                if broker_id == UUID("faeda058-2d3a-4ad6-b29f-d3fb6897cd8b"):
                     place_alice_blue_order(
                         strike_quantity_dict, symbol, next_expiry, nfo_type, ACTION.SELL
                     )
@@ -359,8 +360,8 @@ def buy_or_sell_option(self, data: dict):
             and today_expirys_ongoing_trades[0].option_type != option_type
         ):
             strike_quantity_dict = get_aggregated_trades(today_expirys_ongoing_trades)
-            if broker := data.get("broker"):
-                if broker == "alice_blue":
+            if broker_id := data.get("broker_id"):
+                if broker_id == UUID("faeda058-2d3a-4ad6-b29f-d3fb6897cd8b"):
                     place_alice_blue_order(
                         strike_quantity_dict,
                         symbol,

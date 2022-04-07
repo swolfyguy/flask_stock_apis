@@ -1,5 +1,6 @@
 # Create data storage
 from datetime import datetime
+from sqlalchemy.dialects.postgresql import UUID
 
 from extensions import db
 
@@ -44,4 +45,8 @@ class NFO(db.Model):
 
     expiry = db.Column(db.Date)
 
-    broker_id = db.relationship("broker", back_populates="trades")
+    broker_id = db.Column(
+        UUID(as_uuid=True), db.ForeignKey("broker.id"), nullable=True
+    )
+
+    broker = db.relationship("Broker", backref="trades")
