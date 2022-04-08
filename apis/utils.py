@@ -330,7 +330,7 @@ def buy_or_sell_option(self, data: dict):
                         strike_quantity_dict, symbol, next_expiry, nfo_type, ACTION.SELL
                     )
             close_ongoing_trades(
-                strike_quantity_dict, symbol, next_expiry, current_time, data
+                next_expirys_ongoing_trades, symbol, next_expiry, current_time, data
             )
 
         data = get_final_data(data=data, expiry=next_expiry, current_time=current_time)
