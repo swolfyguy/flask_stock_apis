@@ -1,25 +1,32 @@
 import copy
 from datetime import datetime
+from typing import List
+from uuid import UUID
 
 import requests
-import sqlalchemy
 
 from sqlalchemy.util._collections import _LW
 
-from apis.constants import TRADES
+from apis.broker.alice_blue import close_alice_blue_trades, buy_alice_blue_trades
 from extensions import db
 from models.completed_profit import CompletedProfit
 from models.nfo import NFO
 
 
 EXPIRY_LISTS = [
+    "17 MAR 2022",
+    "24 MAR 2022",
+    "31 MAR 2022",
     "07 APR 2022",
     "13 APR 2022",
-    "21 APR 2022",
     "28 APR 2022",
-    "05 MAY 2022"
-    "26 MAY 2022"
+    "26 MAY 2022",
 ]
+
+
+class STATUS:
+    SUCCESS = "success"
+    ERROR = "error"
 
 
 def get_current_expiry():
@@ -206,24 +213,33 @@ def close_ongoing_trades(ongoing_trades, symbol, expiry_str, current_time, data=
 
 
 def get_current_and_next_expiry():
-    todays_date = datetime.today().date()
-    todays_expiry = False
-    current_expiry = None
-    next_expiry = None
+    todays_date = datetime.now().date()
+    is_today_expiry = False
+    current_expiry_str = None
+    next_expiry_str = None
     for index, expiry_str in enumerate(EXPIRY_LISTS):
         expiry_date = datetime.strptime(expiry_str, "%d %b %Y").date()
         if todays_date > expiry_date:
             continue
         elif expiry_date == todays_date:
-            next_expiry = EXPIRY_LISTS[index + 1]
-            current_expiry = expiry_str
-            todays_expiry = True
+            next_expiry_str = EXPIRY_LISTS[index + 1]
+            current_expiry_str = expiry_str
+            is_today_expiry = True
             break
         elif todays_date < expiry_date:
-            current_expiry = expiry_str
+            current_expiry_str = expiry_str
             break
 
-    return current_expiry, next_expiry, todays_expiry
+    return current_expiry_str, next_expiry_str, is_today_expiry
+
+
+def get_aggregated_trades(trades: List[NFO]):
+    aggregated_trades = {}
+    for trade in trades:
+        aggregated_trades[trade.strike] = (
+            aggregated_trades.get(trade.strike, 0) + trade.quantity
+        )
+    return aggregated_trades
 
 
 def buy_or_sell_option(self, data: dict):
@@ -233,26 +249,36 @@ def buy_or_sell_option(self, data: dict):
     action = data["action"]
     option_type = "ce" if action == "buy" else "pe"
     data["option_type"] = option_type
+    nfo_type = "option"
 
     if todays_expiry:
         trades = []
-        current_expirys_ongoing_trades = NFO.query.filter_by(
+        if today_expirys_ongoing_trades := NFO.query.filter_by(
             strategy_id=data["strategy_id"],
             exited_at=None,
-            nfo_type="option",
+            nfo_type=nfo_type,
             symbol=symbol,
             expiry=current_expiry,
-        ).all()
-
-        if current_expirys_ongoing_trades:
+        ).all():
             current_expirys_ongoing_action = (
-                "buy" if current_expirys_ongoing_trades[0].quantity > 0 else "sell"
+                "buy" if today_expirys_ongoing_trades[0].quantity > 0 else "sell"
             )
             total_ongoing_trades = sum(
-                [trade.quantity for trade in current_expirys_ongoing_trades]
+                trade.quantity for trade in today_expirys_ongoing_trades
             )
+
+            strike_quantity_dict = get_aggregated_trades(today_expirys_ongoing_trades)
+            if broker_id := data.get("broker_id"):
+                if broker_id == UUID("faeda058-2d3a-4ad6-b29f-d3fb6897cd8b"):
+                    close_alice_blue_trades(
+                        strike_quantity_dict,
+                        symbol,
+                        current_expiry,
+                        nfo_type
+                    )
+
             close_ongoing_trades(
-                current_expirys_ongoing_trades,
+                today_expirys_ongoing_trades,
                 symbol,
                 current_expiry,
                 current_time,
@@ -267,13 +293,25 @@ def buy_or_sell_option(self, data: dict):
                 next_expiry_data = get_final_data(
                     data=data_copy, expiry=next_expiry, current_time=current_time
                 )
-                obj = self.create_object(next_expiry_data, kwargs={})
-                trades.append(obj)
+                quantity = (
+                    next_expiry_data["quantity"]
+                    if next_expiry_data["quantity"] > 0
+                    else (-1 * next_expiry_data["quantity"])
+                )
+                status = buy_alice_blue_trades(
+                    strike_quantity_dict={next_expiry_data["strike"]: quantity},
+                    symbol=next_expiry_data["symbol"],
+                    expiry=next_expiry,
+                    nfo_type=nfo_type,
+                )
+                if status == STATUS.SUCCESS:
+                    obj = self.create_object(next_expiry_data, kwargs={})
+                    trades.append(obj)
 
         next_expirys_ongoing_trades = NFO.query.filter_by(
             strategy_id=data["strategy_id"],
             exited_at=None,
-            nfo_type="option",
+            nfo_type=nfo_type,
             symbol=symbol,
             expiry=next_expiry,
         ).all()
@@ -282,39 +320,66 @@ def buy_or_sell_option(self, data: dict):
             next_expirys_ongoing_trades
             and next_expirys_ongoing_trades[0].option_type != option_type
         ):
+            strike_quantity_dict = get_aggregated_trades(next_expirys_ongoing_trades)
+            if broker_id := data.get("broker_id"):
+                if broker_id == UUID("faeda058-2d3a-4ad6-b29f-d3fb6897cd8b"):
+                    close_alice_blue_trades(
+                        strike_quantity_dict, symbol, next_expiry, nfo_type
+                    )
             close_ongoing_trades(
                 next_expirys_ongoing_trades, symbol, next_expiry, current_time, data
             )
+
         data = get_final_data(data=data, expiry=next_expiry, current_time=current_time)
-        obj = self.create_object(data, kwargs={})
-        trades.append(obj)
+        status = buy_alice_blue_trades(
+            {data["strike"]: data["quantity"]},
+            symbol,
+            next_expiry,
+            nfo_type,
+        )
+        if status == STATUS.SUCCESS:
+            obj = self.create_object(data, kwargs={})
+            trades.append(obj)
 
         return trades
 
     else:
-        current_expirys_ongoing_trades = NFO.query.filter_by(
+        today_expirys_ongoing_trades = NFO.query.filter_by(
             strategy_id=data["strategy_id"],
             exited_at=None,
-            nfo_type="option",
+            nfo_type=nfo_type,
             symbol=symbol,
             expiry=current_expiry,
         ).all()
 
         if (
-            current_expirys_ongoing_trades
-            and current_expirys_ongoing_trades[0].option_type != option_type
+            today_expirys_ongoing_trades
+            and today_expirys_ongoing_trades[0].option_type != option_type
         ):
+            strike_quantity_dict = get_aggregated_trades(today_expirys_ongoing_trades)
+            if broker_id := data.get("broker_id"):
+                if broker_id == UUID("faeda058-2d3a-4ad6-b29f-d3fb6897cd8b"):
+                    close_alice_blue_trades(
+                        strike_quantity_dict,
+                        symbol,
+                        current_expiry,
+                        nfo_type,
+                    )
             close_ongoing_trades(
-                current_expirys_ongoing_trades,
+                today_expirys_ongoing_trades,
                 symbol,
                 current_expiry,
                 current_time,
                 data,
             )
-        data = get_final_data(data, expiry=current_expiry, current_time=current_time)
 
-        obj = self.create_object(data, kwargs={})
-        return (obj,)
+        data = get_final_data(data, expiry=current_expiry, current_time=current_time)
+        status = buy_alice_blue_trades(
+            {data["strike"]: data["quantity"]}, symbol, current_expiry, nfo_type
+        )
+        if status == STATUS.SUCCESS:
+            obj = self.create_object(data, kwargs={})
+            return (obj,)
 
 
 def get_computed_profit_without_fetching_completed_profit(strategy_id=None):
@@ -393,7 +458,7 @@ def get_computed_profit_without_fetching_completed_profit(strategy_id=None):
             }
         )
 
-    result = {
+    return {
         "data": data,
         "meta": {
             "total_profits": round(total_profits, 2),
@@ -401,7 +466,6 @@ def get_computed_profit_without_fetching_completed_profit(strategy_id=None):
             "total_ongoing_profits": round(total_ongoing_profits, 2),
         },
     }
-    return result
 
 
 def get_computed_profit(strategy_id=None):
@@ -528,10 +592,11 @@ def get_computed_profit(strategy_id=None):
         )
 
     total_completed_profits = sum(
-        [cp_obj.profit for cp_obj in completed_profit_dict.values()]
+        cp_obj.profit for cp_obj in completed_profit_dict.values()
     )
+
     total_profits = total_completed_profits + total_ongoing_profits
-    result = {
+    return {
         "data": data,
         "meta": {
             "total_profits": round(total_profits, 2),
@@ -539,7 +604,6 @@ def get_computed_profit(strategy_id=None):
             "total_ongoing_profits": round(total_ongoing_profits, 2),
         },
     }
-    return result
 
 
 def close_all_trades(strategy_id=None):
