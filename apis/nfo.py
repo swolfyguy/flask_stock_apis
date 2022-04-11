@@ -75,9 +75,7 @@ class NFOList(ResourceList):
             result, objects_count, qs, url_for(self.view, _external=True, **view_kwargs)
         )
 
-        final_result = self.after_get(result)
-
-        return final_result
+        return self.after_get(result)
 
     @check_method_requirements
     def post(self, *args, **kwargs):
@@ -116,13 +114,14 @@ class NFOList(ResourceList):
             objects = buy_or_sell_option(self, data)
         else:
             object_1 = buy_or_sell_future(self, data)
-            object_2 = buy_or_sell_option(self, data)
-            objects = [*object_1, *object_2]
+            if object_2 := buy_or_sell_option(self, data):
+                objects = [*object_1, *object_2]
+            else:
+                objects = object_1
 
         schema_kwargs.update({"many": True})
         schema = compute_schema(self.schema, schema_kwargs, qs, qs.include)
-        result = schema.dump(objects).data
-        return result
+        return schema.dump(objects).data if objects else "No Trade"
 
     schema = NFOSchema
     data_layer = {
