@@ -4,10 +4,7 @@ import logging
 from alice_blue import AliceBlue, TransactionType, OrderType, ProductType
 
 from extensions import db
-from main import telegram_bot
 from models.broker import Broker
-import telegram_send
-import telegram
 
 log = logging.getLogger(__name__)
 
@@ -143,6 +140,7 @@ def get_order_status(alice, order_id):
     order_status = alice.get_order_history(order_id)["data"][0]["order_status"]
     if order_status == "complete":
         return "success"
+    from main import telegram_bot
     telegram_bot.send_message(chat_id='1229129389', message=order_status)
     log.warning(alice.get_order_history(order_id)["data"][0])
     return "error"
