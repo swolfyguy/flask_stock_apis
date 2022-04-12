@@ -1,5 +1,6 @@
 appdirs==1.4.4
 alice-blue==1.0.3
+telegram-send==0.33.1
 beautifulsoup4==4.9.3
 black==21.6b0
 certifi==2021.5.30
