@@ -54,7 +54,7 @@ def register_base_routes(app):
     @app.route("/")
     def index():
         response = "Hello from a public endpoint! You don't need to be authenticated to see this."
-        print(response)
+        app.logger.debug('this is a DEBUG message')
         return jsonify(message=response)
 
     @app.route("/api/schedule/dump_option_chain")
