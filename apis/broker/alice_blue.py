@@ -1,4 +1,5 @@
 import datetime
+import logging
 
 from alice_blue import AliceBlue, TransactionType, OrderType, ProductType
 
@@ -131,8 +132,9 @@ def buy_alice_blue_trades(
         buy_order_action_id_list.append(place_order_response["data"]["oms_order_id"])
 
     for order_id in buy_order_action_id_list:
-        return (
-            "success"
-            if alice.get_order_history(order_id)["data"][0]["order_status"] == "complete"
-            else "error"
-        )
+        order_status = alice.get_order_history(order_id)["data"][0]["order_status"]
+        if order_status == "complete":
+            return "success"
+        else:
+            logging.warning(alice.get_order_history(order_id)["data"][0])
+
