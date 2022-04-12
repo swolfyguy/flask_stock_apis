@@ -6,6 +6,7 @@ from alice_blue import AliceBlue, TransactionType, OrderType, ProductType
 from extensions import db
 from models.broker import Broker
 
+log = logging.getLogger(__name__)
 
 def get_alice_blue_obj():
     broker = Broker.query.filter_by(name="alice_blue").scalar()
@@ -136,5 +137,4 @@ def buy_alice_blue_trades(
         if order_status == "complete":
             return "success"
         else:
-            logging.warning(alice.get_order_history(order_id)["data"][0])
-
+            log.warning(alice.get_order_history(order_id)["data"][0])

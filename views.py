@@ -1,5 +1,6 @@
 # Create endpoints
 import datetime
+import logging
 import time
 
 from flask import jsonify
@@ -12,6 +13,8 @@ from apis.option_chain import OptionChainList, OptionChainDetail
 from apis.utils import get_computed_profit, get_constructed_data, close_all_trades
 from models.option_chain import OptionChain
 from extensions import db
+
+log = logging.getLogger(__name__)
 
 
 def update_option_chain(symbol="BANKNIFTY"):
@@ -51,6 +54,7 @@ def register_base_routes(app):
     @app.route("/")
     def index():
         response = "Hello from a public endpoint! You don't need to be authenticated to see this."
+        log.info(response)
         return jsonify(message=response)
 
     @app.route("/api/schedule/dump_option_chain")
