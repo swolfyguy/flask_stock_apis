@@ -142,9 +142,9 @@ def get_order_status(alice, order_id):
     if order_status["order_status"] == "complete":
         return "success"
 
-    capture_exception(Exception(order_status))
+    capture_exception(Exception(order_status["rejection_reason"], order_status))
 
     from main import telegram_bot
-    telegram_bot.send_message(chat_id='1229129389', message=order_status)
+    telegram_bot.send_message(chat_id='1229129389', text=order_status)
     log.warning(alice.get_order_history(order_id)["data"][0])
     return "error"
