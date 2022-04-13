@@ -14,12 +14,12 @@ from models.nfo import NFO
 
 
 EXPIRY_LISTS = [
-    "17 MAR 2022",
-    "24 MAR 2022",
-    "31 MAR 2022",
     "07 APR 2022",
     "13 APR 2022",
+    "21 APR 2022",
     "28 APR 2022",
+    "05 MAY 20022",
+    "12 MAY 2022",
     "26 MAY 2022",
 ]
 
