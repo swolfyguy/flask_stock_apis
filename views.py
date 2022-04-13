@@ -72,6 +72,15 @@ def register_base_routes(app):
     def compute_strategys_profit(strategy_id):
         return get_computed_profit(strategy_id)
 
+    @app.route("/api/error")
+    def raise_error():
+        from sentry_sdk import capture_exception
+        try:
+            a = 1/0
+        except Exception as e:
+            capture_exception(Exception("this is random exception"))
+            return "exception raised"
+
     # @app.route("/api/close_trades/<strategy_id>")
     # def close_specific_trades(strategy_id):
     #     return close_all_trades(strategy_id)

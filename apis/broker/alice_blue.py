@@ -2,6 +2,7 @@ import datetime
 import logging
 
 from alice_blue import AliceBlue, TransactionType, OrderType, ProductType
+from sentry_sdk import capture_exception
 
 from extensions import db
 from models.broker import Broker
@@ -137,9 +138,12 @@ def buy_alice_blue_trades(
 
 
 def get_order_status(alice, order_id):
-    order_status = alice.get_order_history(order_id)["data"][0]["order_status"]
-    if order_status == "complete":
+    order_status = alice.get_order_history(order_id)["data"][0]
+    if order_status["order_status"] == "complete":
         return "success"
+
+    capture_exception(Exception(order_status))
+
     from main import telegram_bot
     telegram_bot.send_message(chat_id='1229129389', message=order_status)
     log.warning(alice.get_order_history(order_id)["data"][0])
