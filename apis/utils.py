@@ -271,10 +271,7 @@ def buy_or_sell_option(self, data: dict):
             if broker_id := data.get("broker_id"):
                 if broker_id == UUID("faeda058-2d3a-4ad6-b29f-d3fb6897cd8b"):
                     close_alice_blue_trades(
-                        strike_quantity_dict,
-                        symbol,
-                        current_expiry,
-                        nfo_type
+                        strike_quantity_dict, symbol, current_expiry, nfo_type
                     )
 
             close_ongoing_trades(
@@ -313,18 +310,14 @@ def buy_or_sell_option(self, data: dict):
                     obj = self.create_object(next_expiry_data, kwargs={})
                     trades.append(obj)
 
-        next_expirys_ongoing_trades = NFO.query.filter_by(
-            strategy_id=data["strategy_id"],
-            exited_at=None,
-            nfo_type=nfo_type,
-            symbol=symbol,
-            expiry=next_expiry,
-        ).all()
-
-        if (
-            next_expirys_ongoing_trades
-            and next_expirys_ongoing_trades[0].option_type != option_type
-        ):
+        if next_expirys_ongoing_trades := NFO.query.filter(
+            NFO.strategy_id == data["strategy_id"],
+            NFO.exited_at == None,
+            NFO.nfo_type == nfo_type,
+            NFO.symbol == symbol,
+            NFO.expiry == next_expiry,
+            NFO.option_type != option_type,
+        ).all():
             strike_quantity_dict = get_aggregated_trades(next_expirys_ongoing_trades)
             if broker_id := data.get("broker_id"):
                 if broker_id == UUID("faeda058-2d3a-4ad6-b29f-d3fb6897cd8b"):
@@ -352,18 +345,14 @@ def buy_or_sell_option(self, data: dict):
             trades.append(obj)
         return trades
     else:
-        today_expirys_ongoing_trades = NFO.query.filter_by(
-            strategy_id=data["strategy_id"],
-            exited_at=None,
-            nfo_type=nfo_type,
-            symbol=symbol,
-            expiry=current_expiry,
-        ).all()
-
-        if (
-            today_expirys_ongoing_trades
-            and today_expirys_ongoing_trades[0].option_type != option_type
-        ):
+        if today_expirys_ongoing_trades := NFO.query.filter(
+            NFO.strategy_id == data["strategy_id"],
+            NFO.exited_at == None,
+            NFO.nfo_type == nfo_type,
+            NFO.symbol == symbol,
+            NFO.expiry == current_expiry,
+            NFO.option_type == option_type,
+        ).all():
             strike_quantity_dict = get_aggregated_trades(today_expirys_ongoing_trades)
             if broker_id := data.get("broker_id"):
                 if broker_id == UUID("faeda058-2d3a-4ad6-b29f-d3fb6897cd8b"):

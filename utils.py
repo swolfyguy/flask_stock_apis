@@ -155,7 +155,9 @@ if __name__ != "__main__":
 
 def add_column():
     with app.app_context():
-        col = db.Column("broker_id", UUID(as_uuid=True), db.ForeignKey("broker.id"), nullable=True)
+        col = db.Column(
+            "broker_id", UUID(as_uuid=True), db.ForeignKey("broker.id"), nullable=True
+        )
         column_name = col.compile(dialect=db.engine.dialect)
         column_type = col.type.compile(db.engine.dialect)
         table_name = NFO.__tablename__
@@ -167,19 +169,20 @@ def add_column():
         print("column added")
 
 
-
-
 # add_column()
 
-#
+
 # def delete_rows():
 #     with app.app_context():
-#         delete_q = NFO.__table__.delete().where(NFO.exited_at != None)
+#         delete_q = NFO.__table__.delete().where(
+#             and_(NFO.exited_at == None, NFO.expiry == datetime.date(2022, 4, 28))
+#         )
 #         db.session.execute(delete_q)
 #         db.session.commit()
+#         print("rows deleted ")
+
 #
-#
-# delete_rows()
+# # delete_rows()
 
 
 def undo_last_action():
@@ -294,12 +297,12 @@ datetime_format = "%Y-%m-%dT%H:%M"
 def read_tv_alerts():
     todays_date = datetime.date.today()
     with open(
-        "trading_view_chart_calls/TradingView_Alerts_Log_2022-03-15.csv", "r"
+        "trading_view_chart_calls/TradingView_Alerts_Log_2022-04-13.csv", "r"
     ) as csvfile:
         lines = csv.reader(csvfile, delimiter=",")
         executed_time_lst = []
         for index, row in enumerate(lines):
-            if index > 0 and row[2] == "BankNifty Every Candle; MV:87; TF:5, M_server":
+            if index > 0 and row[2] == "BankNifty Every Candle; MV:35; TF:5, M_server":
                 executed_time = parser.parse(row[4]) + datetime.timedelta(
                     hours=5, minutes=30
                 )
