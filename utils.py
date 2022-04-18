@@ -87,7 +87,7 @@ if __name__ != "__main__":
     date_profit_dict = {}
     with open("db_data/till_26_mar.csv", "r") as csvfile:
         lines = csv.reader(csvfile, delimiter=",")
-        for index, row in enumerate(lines):
+        for row in lines:
             # strategy_id
             if row[10] == "3":
                 try:
@@ -163,8 +163,9 @@ def add_column():
         table_name = NFO.__tablename__
         print("column adding")
         db.engine.execute(
-            "ALTER TABLE %s ADD COLUMN %s %s" % (table_name, column_name, column_type)
+            f"ALTER TABLE {table_name} ADD COLUMN {column_name} {column_type}"
         )
+
         db.session.commit()
         print("column added")
 
@@ -226,11 +227,10 @@ def compare_db_with_tdview_profit():
             if index > 0:
                 if row[0] not in csv_lookup:
                     csv_lookup[row[0]] = [row[3], row[6]]
+                elif row[3] != "":
+                    csv_lookup[row[0]].append(row[3])
                 else:
-                    if row[3] != "":
-                        csv_lookup[row[0]].append(row[3])
-                    else:
-                        del csv_lookup[row[0]]
+                    del csv_lookup[row[0]]
 
     datetime_format = "%Y-%m-%d %H:%M"
     final_csv_lookup = {
@@ -271,20 +271,21 @@ def compare_db_with_tdview_profit():
                 hours=5, minutes=30
             )
 
-            if ist_placed_at_datetime in final_csv_lookup:
-                if ist_placed_at_datetime.weekday() != 4:
-
-                    _profit = float(final_csv_lookup[ist_placed_at_datetime][1]) - (
-                        nfo.profit
-                    )
-                    if (
-                        final_csv_lookup[ist_placed_at_datetime][0]
-                        == ist_exited_at_datetime
-                    ):
-                        profit.append(round(_profit, 2))
-                    else:
-                        print(_profit)
-                        unrealized_profit += _profit
+            if (
+                ist_placed_at_datetime in final_csv_lookup
+                and ist_placed_at_datetime.weekday() != 4
+            ):
+                _profit = float(final_csv_lookup[ist_placed_at_datetime][1]) - (
+                    nfo.profit
+                )
+                if (
+                    final_csv_lookup[ist_placed_at_datetime][0]
+                    == ist_exited_at_datetime
+                ):
+                    profit.append(round(_profit, 2))
+                else:
+                    print(_profit)
+                    unrealized_profit += _profit
 
         profit.sort()
         pprint(f"final profit: {profit}")
@@ -321,6 +322,36 @@ def read_tv_alerts():
 
 
 # read_tv_alerts()
+
+
+def func():
+    with open(
+        "trading_view_chart_calls/testing_Mahesh_strategy_[RS]_V0_2022-04-14.csv", "r"
+    ) as csvfile:
+        lines = csv.reader(csvfile, delimiter=",")
+        long_profit = 0
+        short_profit = 0
+        long_loss = 0
+        short_loss = 0
+        for index, row in enumerate(lines):
+            if index > 0 and index % 2 == 0 and row[6] != "":
+                profit = float(row[6])
+                if row[2] == "long":
+                    if profit > 0:
+                        long_profit += profit
+                    else:
+                        long_loss += profit
+                elif profit > 0:
+                    short_profit += profit
+                else:
+                    short_loss += profit
+
+        print(long_profit)
+        print(long_loss)
+        print()
+        print(short_profit)
+        print(short_loss)
+
 
 # compare_db_with_tdview_profit()
 

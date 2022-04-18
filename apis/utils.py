@@ -310,14 +310,18 @@ def buy_or_sell_option(self, data: dict):
                     obj = self.create_object(next_expiry_data, kwargs={})
                     trades.append(obj)
 
-        if next_expirys_ongoing_trades := NFO.query.filter(
-            NFO.strategy_id == data["strategy_id"],
-            NFO.exited_at == None,
-            NFO.nfo_type == nfo_type,
-            NFO.symbol == symbol,
-            NFO.expiry == next_expiry,
-            NFO.option_type != option_type,
-        ).all():
+        next_expirys_ongoing_trades = NFO.query.filter_by(
+            strategy_id=data["strategy_id"],
+            exited_at=None,
+            nfo_type=nfo_type,
+            symbol=symbol,
+            expiry=next_expiry,
+        ).all()
+
+        if (
+            next_expirys_ongoing_trades
+            and next_expirys_ongoing_trades[0].option_type != option_type
+        ):
             strike_quantity_dict = get_aggregated_trades(next_expirys_ongoing_trades)
             if broker_id := data.get("broker_id"):
                 if broker_id == UUID("faeda058-2d3a-4ad6-b29f-d3fb6897cd8b"):
@@ -345,14 +349,18 @@ def buy_or_sell_option(self, data: dict):
             trades.append(obj)
         return trades
     else:
-        if today_expirys_ongoing_trades := NFO.query.filter(
-            NFO.strategy_id == data["strategy_id"],
-            NFO.exited_at == None,
-            NFO.nfo_type == nfo_type,
-            NFO.symbol == symbol,
-            NFO.expiry == current_expiry,
-            NFO.option_type == option_type,
-        ).all():
+        today_expirys_ongoing_trades = NFO.query.filter_by(
+            strategy_id=data["strategy_id"],
+            exited_at=None,
+            nfo_type=nfo_type,
+            symbol=symbol,
+            expiry=current_expiry,
+        ).all()
+
+        if (
+            today_expirys_ongoing_trades
+            and today_expirys_ongoing_trades[0].option_type != option_type
+        ):
             strike_quantity_dict = get_aggregated_trades(today_expirys_ongoing_trades)
             if broker_id := data.get("broker_id"):
                 if broker_id == UUID("faeda058-2d3a-4ad6-b29f-d3fb6897cd8b"):

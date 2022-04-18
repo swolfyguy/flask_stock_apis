@@ -9,6 +9,7 @@ from models.broker import Broker
 
 log = logging.getLogger(__name__)
 
+
 def get_alice_blue_obj():
     broker = Broker.query.filter_by(name="alice_blue").scalar()
     try:
@@ -145,6 +146,13 @@ def get_order_status(alice, order_id):
     capture_exception(Exception(order_status["rejection_reason"], order_status))
 
     from main import telegram_bot
-    telegram_bot.send_message(chat_id='1229129389', text=order_status)
+
+    telegram_bot.send_message(chat_id="1229129389", text=order_status)
     log.warning(alice.get_order_history(order_id)["data"][0])
     return "error"
+
+
+{
+    "Apikey": "NOYM5GUM9P4JSFD6",
+    "command": "PLACE_ORDER,AB012345,0,REGULAR,FNO,SBIN_26-DEP-2019_190_CE,BUY,MARKET,INTRADAY,1,0,0,0,0,0,0,DAY,FALSE,0,-1,Group ID,",
+}
