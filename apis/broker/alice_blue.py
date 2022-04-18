@@ -153,6 +153,7 @@ def get_order_status(alice, order_id):
 
 
 # this is swastik algo syntax,
+
 {
     "Apikey": "NOYM5GUM9P4JSFD6",
     "command": "PLACE_ORDER,AB012345,0,REGULAR,FNO,SBIN_26-DEP-2019_190_CE,BUY,MARKET,INTRADAY,1,0,0,0,0,0,0,DAY,FALSE,0,-1,Group ID,",
